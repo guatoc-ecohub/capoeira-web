@@ -43,21 +43,45 @@ Capturas del gate GPU real (Quadro M6000, `shot3d --headed`): 0 errores de pági
 
 ## Las seis paradas (qué, cuándo, quiénes, qué se entrena, dónde, cómo)
 
-| # | Toque | Parada | Qué lleva |
+| # | Rótulo | Parada | Qué lleva |
 |---|---|---|---|
-| 1 | Angola | El campamento | Fechas, tagline, cupos, botón de reserva sin cifra |
-| 2 | São Bento Grande | Tres días, dos rodas | La agenda completa de los tres días |
-| 3 | Iúna | Los mestres | Las tres fichas **con sus fotos** |
-| 4 | Benguela | Técnica para el jogo | Las cuatro disciplinas (BJJ, Muay Thai, Kick Boxing, Boxeo) |
-| 5 | Cavalaria | El lugar | Las dos sedes + el material de Guatoc |
-| 6 | Santa Maria | Reservar el cupo | Precio, total, cupos, cohortes **y el formulario** |
+| 1 | 10 · 11 · 12 OCT 2026 · GUATOC · COLOMBIA | El campamento | Tagline, cupos, botón de reserva sin cifra |
+| 2 | El encuentro | Tres días, dos rodas | La agenda completa de los tres días |
+| 3 | Quienes guían el jogo | Los mestres | Las tres fichas **con sus fotos** |
+| 4 | BJJ · Muay Thai · Kick Boxing · Boxeo | **Las artes marciales** | Las cuatro artes, **con quién dicta cada una** |
+| 5 | *(sin rótulo)* | El lugar | Las dos sedes + el material de Guatoc |
+| 6 | Asegure su lugar | Reservar el cupo | Precio, total, cupos, cohortes **y el formulario** |
 
-La parada de técnica es nueva y el formulario de reserva ahora vive dentro del
-recorrido: se extrajo a `src/components/FormularioReserva.jsx` y lo comparten la
-página 2D y la parada, para que la validación no viva en dos sitios.
+**Los toques de capoeira salieron del recorrido.** Eran bonitos pero decorativos: no
+correspondían a nada de lo que va a pasar en el campamento. Lo que se enseña son
+artes marciales aplicadas al jogo, y eso es lo que rotula ahora.
 
-Los toques no son decorado: Iúna es el toque de los graduados, Santa Maria el del
-jogo por la moneda en el piso de la roda, Benguela el toque lento del jogo de dentro.
+Se hicieron las dos cosas, porque una sin la otra dejaba el defecto a medias:
+
+- **La parada de técnica pasó a ser la sección de las artes marciales.** Se llama
+  «Las artes marciales», la rotulan las cuatro (BJJ · Muay Thai · Kick Boxing ·
+  Boxeo) y cada bloque dice **quién la dicta** y para qué sirve en la roda: BJJ y
+  Muay Thai con C.m. Vermelho, Kick Boxing con C.m. Águila, Boxeo con Profesor
+  Capeta. Ahí el rótulo sí es información.
+- **El rótulo dejó de ser una etiqueta fija.** Cada parada lleva el que dice lo que
+  esa parada es, y todos salen de texto que ya existía: los `eyebrow` que la página
+  2D usa («El encuentro», «Quienes guían el jogo», «Asegure su lugar») y el kicker
+  de fechas del hero, que además se quitó del cuerpo para no repetirlo.
+
+**Nada de esto se escribió a mano.** El rótulo de las artes se arma con
+`tecnica.bloques.map(b => b.titulo)`, y quién dicta cada una se cruza contra las
+`disciplinas` de cada ficha —texto dictado por el operador— con `quienDicta()`. No
+hay lista paralela que se pueda desincronizar, y si un arte no apareciera en ninguna
+ficha no se inventa un profesor: no se muestra la línea.
+
+**La parada del lugar quedó sin rótulo, a propósito.** No hay uno honesto para ella
+y prefiero dejarla sin él antes que colgarle un arte marcial que no le corresponde,
+que sería el mismo defecto decorativo con otra palabra. Se ve bien: el título entra
+directo a la entradilla.
+
+En el rail, donde iba el nombre del toque va ahora el número de parada (01 a 06),
+que es información real: el orden del recorrido. El enganche de audio también dejó
+de colgarse de los toques y va por parada.
 
 ## El material de Guatoc
 

@@ -6,6 +6,10 @@ import FormularioReserva from './FormularioReserva.jsx'
 import '../estilos/berimbau.css'
 
 const ESPERA_CARGA = 9000 // ms: si three no llega, se cae al sitio en texto
+
+// Las cuatro artes marciales salen de los bloques de técnica, que son los que el
+// operador dictó. No hay lista paralela que se pueda desincronizar.
+const artesMarciales = contenido.tecnica.bloques.map((bloque) => bloque.titulo).join(' · ')
 const CONSULTA_ANGOSTA = '(max-width: 799px)'
 
 // Cada parada tiene enlace propio: #parada-mestres abre el recorrido ahi.
@@ -114,7 +118,6 @@ function PanelEvento({ irAParada }) {
   const { hero } = contenido
   return (
     <>
-      <p className="berimbau__kicker">{hero.kicker}</p>
       <p className="berimbau__texto">{hero.tagline}</p>
       <p className="berimbau__cupos">{hero.cupos}</p>
       <button
@@ -175,20 +178,36 @@ function PanelMestres() {
   )
 }
 
+// Quién dicta cada arte no se escribe a mano: se cruza contra las `disciplinas`
+// de cada ficha, que son texto dictado por el operador. Si un arte no apareciera
+// en ninguna ficha, no se inventa un profesor: sencillamente no se muestra.
+function quienDicta(arte) {
+  const ficha = contenido.instructores.fichas.find((candidata) => candidata.disciplinas.includes(arte))
+  return ficha ? ficha.nombre : null
+}
+
 function PanelTecnica() {
   const { tecnica } = contenido
   return (
     <>
       <p className="berimbau__texto">{tecnica.intro}</p>
       <ul className="berimbau__lista">
-        {tecnica.bloques.map((bloque) => (
-          <li key={bloque.titulo}>
-            <span className="berimbau__lista-titulo">
-              <span className="berimbau__numero">{bloque.numero}</span> {bloque.titulo}
-            </span>
-            <span className="berimbau__lista-texto">{bloque.texto}</span>
-          </li>
-        ))}
+        {tecnica.bloques.map((bloque) => {
+          const dicta = quienDicta(bloque.titulo)
+          return (
+            <li key={bloque.titulo}>
+              <span className="berimbau__lista-titulo">
+                <span className="berimbau__numero">{bloque.numero}</span> {bloque.titulo}
+              </span>
+              {dicta ? (
+                <span className="berimbau__lista-detalle">
+                  {tecnica.dictaLabel} {dicta}
+                </span>
+              ) : null}
+              <span className="berimbau__lista-texto">{bloque.texto}</span>
+            </li>
+          )
+        })}
       </ul>
     </>
   )
@@ -275,6 +294,9 @@ export default function Berimbau3D({ alCaer, verTexto }) {
   const reducirMovimiento = useMemo(() => prefiereMenosMovimiento(), [])
   const parada = paradas[indice]
   const enLugar = indice === PARADA_LUGAR
+  // La parada de las artes marciales se rotula con las artes que dictan los
+  // profesores: ahí la etiqueta es información, no adorno.
+  const rotulo = parada.rotulo || (parada.id === 'tecnica' ? artesMarciales : null)
 
   const caer = useCallback(
     (razon) => {
@@ -371,9 +393,9 @@ export default function Berimbau3D({ alCaer, verTexto }) {
         // replaceState, no hash directo: no llena el historial ni mueve el scroll.
         window.history.replaceState(null, '', `#parada-${paradas[siguiente].id}`)
       }
-      // Enganche de audio: aca sonaria el toque de la parada cuando existan los
+      // Enganche de audio: aca sonaria la pista de la parada cuando existan los
       // archivos. Hoy no suena nada: sin gesto previo el navegador lo bloquea.
-      // reproducirToque(contenido.medios.audio.toques[siguiente])
+      // reproducirPista(contenido.medios.audio.pistas[siguiente])
     },
     [paradas],
   )
@@ -472,11 +494,8 @@ export default function Berimbau3D({ alCaer, verTexto }) {
       ) : null}
 
       <section className="berimbau__panel" aria-live="polite" aria-label={berimbau.paradaAria}>
-        <p className="berimbau__toque">
-          <span>{berimbau.toqueEtiqueta}</span> {parada.toque}
-        </p>
+        {rotulo ? <p className="berimbau__parada-rotulo">{rotulo}</p> : null}
         <h1 className="berimbau__titulo">{parada.titulo}</h1>
-        <p className="berimbau__toque-nota">{parada.toqueNota}</p>
         <p className="berimbau__entradilla">{parada.entradilla}</p>
         <CuerpoParada indice={indice} parada={parada} irAParada={irAParada} />
         <div className="berimbau__pasos">
@@ -501,13 +520,13 @@ export default function Berimbau3D({ alCaer, verTexto }) {
               <button
                 type="button"
                 className="berimbau__rail-boton"
-                aria-label={`${item.toque} · ${item.titulo}`}
+                aria-label={`${berimbau.paradaDe} ${posicion + 1}: ${item.titulo}`}
                 aria-current={posicion === indice ? 'step' : undefined}
                 onClick={() => irAParada(posicion)}
               >
                 <span className="berimbau__rail-marca" aria-hidden="true" />
                 <span className="berimbau__rail-texto">
-                  <span className="berimbau__rail-toque">{item.toque}</span>
+                  <span className="berimbau__rail-indice">{String(posicion + 1).padStart(2, '0')}</span>
                   <span className="berimbau__rail-titulo">{item.titulo}</span>
                 </span>
               </button>

@@ -76,6 +76,9 @@ export const contenido = {
       { numero: '03', titulo: 'Kick Boxing', texto: 'Enfoque y aplicación a la capoeira competitiva, con estrategia y objetividad.' },
       { numero: '04', titulo: 'Boxeo', texto: 'Técnicas de boxeo aplicadas a la capoeira sin perder el contexto del jogo.' },
     ],
+    // Quién dicta cada arte NO se escribe a mano: se cruza contra las
+    // `disciplinas` de cada ficha, que son texto dictado por el operador.
+    dictaLabel: 'Con',
   },
   precios: {
     eyebrow: 'Asegure su lugar',
@@ -122,10 +125,15 @@ export const contenido = {
     detalle: '10 · 11 · 12 octubre de 2026 · Guatoc, Colombia',
     lema: 'Artes marciales aplicadas al jogo',
   },
-  // Recorrido 3D. El berimbau manda la roda: su toque decide qué juego se juega,
-  // así que el instrumento es el menú. El recorrido NO es un adorno con un botón
-  // al final: entre las seis paradas tiene que caber toda la información del
-  // evento (qué es, cuándo, quiénes, qué se entrena, dónde y cómo reservar).
+  // Recorrido 3D. El berimbau manda la roda, así que el instrumento es el menú.
+  // El recorrido NO es un adorno con un botón al final: entre las seis paradas
+  // tiene que caber toda la información del evento (qué es, cuándo, quiénes, qué
+  // se entrena, dónde y cómo reservar).
+  //
+  // El rótulo de cada parada dice lo que esa parada ES. No hay etiqueta de
+  // adorno: donde no existe un rótulo honesto, la parada va sin rótulo. Los
+  // rótulos salen de los eyebrow que la página 2D ya usa, o de las artes
+  // marciales cuando la parada habla de entrenamiento.
   // El orden de `paradas` es el mismo de CAMARA en src/tresd/paradas.js.
   berimbau: {
     marca: 'Guatoc Capoeira',
@@ -134,6 +142,7 @@ export const contenido = {
     pista: 'Use las flechas, la rueda o el rail para recorrer el instrumento.',
     railAria: 'Paradas del recorrido por el berimbau',
     paradaAria: 'Contenido de la parada',
+    paradaDe: 'Parada',
     anterior: 'Parada anterior',
     siguiente: 'Parada siguiente',
     verTexto: 'Ver todo en texto',
@@ -141,40 +150,36 @@ export const contenido = {
     avisoFallback: 'El recorrido en 3D no corrió en este equipo, así que acá está el mismo contenido en texto.',
     avisoTexto: 'Está viendo el campamento en texto. El recorrido por el berimbau sigue disponible.',
     avisoRendimiento: 'Bajamos la calidad para sostener el movimiento.',
-    toqueEtiqueta: 'Toque',
     paradas: [
       {
         id: 'evento',
-        toque: 'Angola',
-        toqueNota: 'El toque más antiguo: jogo bajo, pausado, de mirada larga.',
+        rotulo: '10 · 11 · 12 OCT 2026 · GUATOC · COLOMBIA',
         titulo: 'El campamento',
         entradilla: 'Tres días de entrenamiento en Guatoc, con cupos contados para que el trabajo sea cercano.',
       },
       {
         id: 'dias',
-        toque: 'São Bento Grande',
-        toqueNota: 'El toque rápido: el jogo sube, se aprieta y pide respuesta.',
+        rotulo: 'El encuentro',
         titulo: 'Tres días, dos rodas',
         entradilla: 'Abre una roda, cierra otra, y en medio queda el día largo de entrenamiento.',
       },
       {
         id: 'mestres',
-        toque: 'Iúna',
-        toqueNota: 'El toque de los graduados: en la roda solo entran los formados.',
+        rotulo: 'Quienes guían el jogo',
         titulo: 'Los mestres',
         entradilla: 'Tres miradas distintas sobre el mismo jogo, cada una con su disciplina de combate.',
       },
       {
         id: 'tecnica',
-        toque: 'Benguela',
-        toqueNota: 'Toque lento, jogo de dentro: la técnica se trabaja de cerca.',
-        titulo: 'Técnica para el jogo',
-        entradilla: 'Cuatro disciplinas entran a la roda sin sacar a nadie de su contexto.',
+        // El rótulo se arma con las artes que dictan los profesores: es la
+        // parada donde viven, y ahí la etiqueta sí es información.
+        titulo: 'Las artes marciales',
+        entradilla: 'Cuatro artes marciales entran a la roda sin sacar a nadie de su contexto. La capoeira es el marco donde todas aterrizan.',
       },
       {
+        // Sin rótulo a propósito: no hay uno honesto para esta parada y es
+        // preferible dejarla sin él antes que inventarlo.
         id: 'lugar',
-        toque: 'Cavalaria',
-        toqueNota: 'El toque que avisa quién viene llegando al terreiro.',
         titulo: 'El lugar',
         entradilla: 'Guatoc mira de frente la cascada más alta de Colombia. Ahí se entrena, y el coliseo de la vereda El Curí cierra el campamento.',
         sedes: [
@@ -184,8 +189,7 @@ export const contenido = {
       },
       {
         id: 'reserva',
-        toque: 'Santa Maria',
-        toqueNota: 'El toque del dobrão en el piso de la roda: juega quien lo levanta.',
+        rotulo: 'Asegure su lugar',
         titulo: 'Reservar el cupo',
         entradilla: 'La reserva asegura el cupo y desbloquea el contenido del campamento.',
       },
@@ -248,16 +252,17 @@ export const contenido = {
       },
     ],
     // Enganche de audio: sin sonido por ahora, el navegador bloquea el autoplay.
-    // Ponga la ruta del toque y conecte reproducirToque() en Berimbau3D.jsx.
+    // Ponga la ruta y conecte reproducirPista() en Berimbau3D.jsx. Va por parada,
+    // no por toque: los toques ya no rotulan nada.
     audio: {
-      nota: 'Sin audio por ahora. Cada parada ya sabe cuál toque le corresponde.',
-      toques: [
-        { id: 'angola', src: null },
-        { id: 'sao-bento-grande', src: null },
-        { id: 'iuna', src: null },
-        { id: 'benguela', src: null },
-        { id: 'cavalaria', src: null },
-        { id: 'santa-maria', src: null },
+      nota: 'Sin audio por ahora.',
+      pistas: [
+        { id: 'evento', src: null },
+        { id: 'dias', src: null },
+        { id: 'mestres', src: null },
+        { id: 'tecnica', src: null },
+        { id: 'lugar', src: null },
+        { id: 'reserva', src: null },
       ],
     },
   },
