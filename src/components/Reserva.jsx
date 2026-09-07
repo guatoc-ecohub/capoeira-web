@@ -1,236 +1,58 @@
-import { useMemo, useState } from 'react'
-import { tatuadores } from '../data/tatuadores.js'
+import { useState } from 'react'
+import { contenido } from '../data/contenido.js'
 
-const FECHAS = [
-  { valor: '2026-09-25', label: 'Viernes 25 de septiembre' },
-  { valor: '2026-09-26', label: 'Sábado 26 de septiembre' },
-  { valor: '2026-09-27', label: 'Domingo 27 de septiembre' },
-  { valor: 'sin-decidir', label: 'Aún no decido' },
-]
-
-const TIPOS = [
-  { valor: 'flash', label: 'Flash (orden de llegada)' },
-  { valor: 'sesion', label: 'Sesión completa (con cita)' },
-]
-
-const ESTADO_INICIAL = {
-  nombre: '',
-  tatuadorId: 'sin-preferencia',
-  tipo: 'flash',
-  fecha: FECHAS[0].valor,
-  contacto: '',
-  idea: '',
-}
-
-function construirMensajeWhatsApp(form, tatuadorLabel) {
-  const tipoLabel = TIPOS.find((t) => t.valor === form.tipo)?.label ?? form.tipo
-  const fechaLabel = FECHAS.find((f) => f.valor === form.fecha)?.label ?? form.fecha
-
-  const lineas = [
-    'Reserva — Tatuaje Guatoc (25-27 sep 2026)',
-    `Nombre: ${form.nombre}`,
-    `Tatuador: ${tatuadorLabel}`,
-    `Tipo: ${tipoLabel}`,
-    `Fecha preferida: ${fechaLabel}`,
-    `Contacto: ${form.contacto}`,
-  ]
-  if (form.idea.trim()) {
-    lineas.push(`Idea del tatuaje: ${form.idea.trim()}`)
-  }
-  return lineas.join('\n')
-}
+const estadoInicial = { nombre: '', correo: '', celular: '' }
 
 export default function Reserva() {
-  const [form, setForm] = useState(ESTADO_INICIAL)
+  const { reserva } = contenido
+  const [form, setForm] = useState(estadoInicial)
   const [errores, setErrores] = useState({})
-  const [estado, setEstado] = useState('idle') // idle | enviando | ok | fallback | error
-
-  const opcionesTatuador = useMemo(
-    () => [
-      { valor: 'sin-preferencia', label: 'Sin preferencia (cualquiera disponible)' },
-      ...tatuadores.map((t) => ({ valor: t.id || t.nombre, label: t.nombre })),
-    ],
-    [],
-  )
+  const [enviada, setEnviada] = useState(false)
 
   function actualizar(campo, valor) {
-    setForm((f) => ({ ...f, [campo]: valor }))
-    setErrores((e) => ({ ...e, [campo]: undefined }))
+    setForm((actual) => ({ ...actual, [campo]: valor }))
+    setErrores((actual) => ({ ...actual, [campo]: '' }))
+    setEnviada(false)
   }
 
-  function validar() {
+  function enviar(evento) {
+    evento.preventDefault()
     const nuevosErrores = {}
-    if (!form.nombre.trim()) nuevosErrores.nombre = 'Escribe tu nombre.'
-    if (!form.contacto.trim()) {
-      nuevosErrores.contacto = 'Deja un WhatsApp o correo para contactarte.'
-    }
+    if (!form.nombre.trim()) nuevosErrores.nombre = reserva.errores.nombre
+    if (!form.correo.trim()) nuevosErrores.correo = reserva.errores.correo
+    else if (!/^\S+@\S+\.\S+$/.test(form.correo.trim())) nuevosErrores.correo = reserva.errores.correoFormato
     setErrores(nuevosErrores)
-    return Object.keys(nuevosErrores).length === 0
-  }
-
-  async function onSubmit(e) {
-    e.preventDefault()
-    if (!validar()) return
-
-    const tatuadorLabel =
-      opcionesTatuador.find((o) => o.valor === form.tatuadorId)?.label ?? 'Sin preferencia'
-
-    setEstado('enviando')
-
-    const payload = {
-      nombre: form.nombre.trim(),
-      tatuadorId: form.tatuadorId,
-      tatuador: tatuadorLabel,
-      tipo: form.tipo,
-      fecha: form.fecha,
-      contacto: form.contacto.trim(),
-      idea: form.idea.trim(),
-      timestamp: new Date().toISOString(),
-    }
-
-    try {
-      const controlador = new AbortController()
-      const timeout = setTimeout(() => controlador.abort(), 6000)
-
-      const res = await fetch('/api/reserva', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        signal: controlador.signal,
-      })
-      clearTimeout(timeout)
-
-      if (!res.ok) throw new Error(`Backend respondió ${res.status}`)
-
-      setEstado('ok')
-      setForm(ESTADO_INICIAL)
-    } catch {
-      // Sin backend disponible (o falló): no se pierde la reserva, se abre WhatsApp prellenado.
-      const mensaje = construirMensajeWhatsApp(form, tatuadorLabel)
-      window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener,noreferrer')
-      setEstado('fallback')
-    }
+    if (Object.keys(nuevosErrores).length === 0) setEnviada(true)
   }
 
   return (
-    <section id="reserva" className="reserva">
-      <div className="contenedor">
-        <h2 className="titulo-seccion">Reserva tu cupo</h2>
-        <p className="reserva__intro">
-          Cuéntanos qué quieres hacerte. Si el envío directo falla, te abrimos WhatsApp
-          con el mensaje ya listo para que la reserva no se pierda.
-        </p>
-
-        <form className="reserva__form" onSubmit={onSubmit} noValidate>
+    <section id="reserva" className="seccion seccion--reserva" aria-labelledby="reserva-titulo">
+      <div className="contenedor reserva__grid">
+        <div className="reserva__copy">
+          <p className="eyebrow">{reserva.eyebrow}</p>
+          <h2 id="reserva-titulo" className="seccion__titulo">{reserva.titulo}</h2>
+          <p className="seccion__intro">{reserva.intro}</p>
+          <p className="reserva__nota">{reserva.nota}</p>
+        </div>
+        <form className="reserva-form" onSubmit={enviar} noValidate>
+          <p className="reserva-form__titulo">{reserva.formularioTitulo}</p>
           <div className="campo">
-            <label htmlFor="nombre">Nombre</label>
-            <input
-              id="nombre"
-              name="nombre"
-              type="text"
-              autoComplete="name"
-              value={form.nombre}
-              onChange={(e) => actualizar('nombre', e.target.value)}
-              aria-invalid={Boolean(errores.nombre)}
-              aria-describedby={errores.nombre ? 'error-nombre' : undefined}
-            />
-            {errores.nombre && (
-              <p className="campo__error" id="error-nombre">
-                {errores.nombre}
-              </p>
-            )}
+            <label htmlFor="nombre">{reserva.nombreLabel} <span aria-hidden="true">*</span></label>
+            <input id="nombre" name="nombre" type="text" autoComplete="name" required value={form.nombre} onChange={(e) => actualizar('nombre', e.target.value)} aria-invalid={Boolean(errores.nombre)} aria-describedby={errores.nombre ? 'error-nombre' : undefined} />
+            {errores.nombre && <p className="campo__error" id="error-nombre">{errores.nombre}</p>}
           </div>
-
           <div className="campo">
-            <label htmlFor="tatuador">Tatuador</label>
-            <select
-              id="tatuador"
-              name="tatuador"
-              value={form.tatuadorId}
-              onChange={(e) => actualizar('tatuadorId', e.target.value)}
-            >
-              {opcionesTatuador.map((o) => (
-                <option key={o.valor} value={o.valor}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="correo">{reserva.correoLabel} <span aria-hidden="true">*</span></label>
+            <input id="correo" name="correo" type="email" autoComplete="email" required value={form.correo} onChange={(e) => actualizar('correo', e.target.value)} aria-invalid={Boolean(errores.correo)} aria-describedby={errores.correo ? 'error-correo' : undefined} />
+            {errores.correo && <p className="campo__error" id="error-correo">{errores.correo}</p>}
           </div>
-
-          <fieldset className="campo campo--fieldset">
-            <legend>Tipo</legend>
-            <div className="campo__opciones">
-              {TIPOS.map((t) => (
-                <label key={t.valor} className="opcion">
-                  <input
-                    type="radio"
-                    name="tipo"
-                    value={t.valor}
-                    checked={form.tipo === t.valor}
-                    onChange={(e) => actualizar('tipo', e.target.value)}
-                  />
-                  {t.label}
-                </label>
-              ))}
-            </div>
-          </fieldset>
-
           <div className="campo">
-            <label htmlFor="fecha">Fecha preferida</label>
-            <select
-              id="fecha"
-              name="fecha"
-              value={form.fecha}
-              onChange={(e) => actualizar('fecha', e.target.value)}
-            >
-              {FECHAS.map((f) => (
-                <option key={f.valor} value={f.valor}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
+            <label htmlFor="celular">{reserva.celularLabel} <small>({reserva.celularAyuda})</small></label>
+            <input id="celular" name="celular" type="tel" autoComplete="tel" value={form.celular} onChange={(e) => actualizar('celular', e.target.value)} />
           </div>
-
-          <div className="campo">
-            <label htmlFor="contacto">WhatsApp o correo</label>
-            <input
-              id="contacto"
-              name="contacto"
-              type="text"
-              autoComplete="tel"
-              placeholder="300 000 0000 o tu@correo.com"
-              value={form.contacto}
-              onChange={(e) => actualizar('contacto', e.target.value)}
-              aria-invalid={Boolean(errores.contacto)}
-              aria-describedby={errores.contacto ? 'error-contacto' : undefined}
-            />
-            {errores.contacto && (
-              <p className="campo__error" id="error-contacto">
-                {errores.contacto}
-              </p>
-            )}
-          </div>
-
-          <div className="campo">
-            <label htmlFor="idea">Idea del tatuaje (opcional)</label>
-            <textarea
-              id="idea"
-              name="idea"
-              rows={4}
-              placeholder="Cuéntanos qué tienes en mente, tamaño, zona del cuerpo..."
-              value={form.idea}
-              onChange={(e) => actualizar('idea', e.target.value)}
-            />
-          </div>
-
-          <button type="submit" className="boton boton--primario" disabled={estado === 'enviando'}>
-            {estado === 'enviando' ? 'Enviando...' : 'Reservar mi cupo'}
-          </button>
-
-          <div className="reserva__estado" role="status" aria-live="polite">
-            {estado === 'ok' && '¡Reserva enviada! Te contactamos pronto.'}
-            {estado === 'fallback' &&
-              'No pudimos enviar la reserva directo — te abrimos WhatsApp con el mensaje listo, solo dale enviar.'}
+          <button type="submit" className="btn btn--primario">{reserva.enviar}</button>
+          <div className="reserva-form__estado" role="status" aria-live="polite">
+            {enviada && reserva.mensajeExito}
           </div>
         </form>
       </div>

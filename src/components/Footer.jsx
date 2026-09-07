@@ -1,9 +1,14 @@
+import { contenido } from '../data/contenido.js'
+
 export default function Footer() {
+  const { footer } = contenido
+
   return (
     <footer className="pie">
-      <div className="contenedor pie__contenido">
-        <p>Tatuaje Guatoc · 25-27 de septiembre de 2026</p>
-        <p className="pie__eje">biodiversidad + tinta</p>
+      <div className="contenedor">
+        <p className="pie__marca">{footer.marca}</p>
+        <p>{footer.detalle}</p>
+        <p className="pie__nota">{footer.lema}</p>
       </div>
     </footer>
   )
