@@ -17,11 +17,9 @@ import {
   Group,
   LatheGeometry,
   Mesh,
-  MeshLambertMaterial,
-  MeshPhongMaterial,
+  PlaneGeometry,
   Points,
   PointsMaterial,
-  ClampToEdgeWrapping,
   QuadraticBezierCurve3,
   RingGeometry,
   SRGBColorSpace,
@@ -30,7 +28,8 @@ import {
   Vector3,
 } from 'three'
 
-import { ARAME, BAQUETA, CABAZA, CORDINHA, DOBRAO, VERGA } from './viaje.js'
+import { ARAME, BAQUETA, CABAZA, CORDINHA, DOBRAO, TELON, VERGA } from './viaje.js'
+import { crearMateriales } from './materiales.js'
 
 export const PALETA = {
   fondo: 0x07100b,
@@ -100,30 +99,6 @@ function lienzo2d(ancho, alto, dibujar) {
   textura.colorSpace = SRGBColorSpace
   textura.anisotropy = 1
   textura.needsUpdate = true
-  return textura
-}
-
-// El interior de una calabaza cortada esta raspado. En un torneado la V corre
-// del borde al fondo, asi que unas bandas horizontales se leen como anillos.
-function texturaRaspado() {
-  const textura = lienzo2d(64, 256, (ctx, w, h) => {
-    ctx.fillStyle = '#8a6234'
-    ctx.fillRect(0, 0, w, h)
-    for (let i = 0; i < 110; i += 1) {
-      const y = (i / 110) * h + Math.sin(i * 2.7) * 1.2
-      ctx.fillStyle = Math.sin(i * 1.9) > 0 ? 'rgba(255,232,192,0.045)' : 'rgba(58,38,16,0.07)'
-      ctx.fillRect(0, y, w, 1)
-    }
-    const grad = ctx.createLinearGradient(0, 0, 0, h)
-    grad.addColorStop(0, 'rgba(0,0,0,0)')
-    grad.addColorStop(1, 'rgba(16,9,2,0.6)')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, w, h)
-  })
-  // Sin repeticion en U: las bandas son constantes alrededor del eje, asi que
-  // envolver la textura solo agrega costuras — se veian como una raya vertical
-  // cruzando la pared del cuenco.
-  textura.wrapS = ClampToEdgeWrapping
   return textura
 }
 
@@ -202,9 +177,10 @@ export function construirBerimbau() {
   const punta = v3(VERGA.punta)
   const curvaVerga = new QuadraticBezierCurve3(pie, v3(VERGA.control), punta)
 
-  const matMadera = new MeshPhongMaterial({ color: PALETA.madera, shininess: 12, specular: 0x1d1810 })
-  const matCordel = new MeshLambertMaterial({ color: PALETA.acento })
-  const matMetal = new MeshPhongMaterial({ color: PALETA.calido, shininess: 120, specular: 0xb99a52 })
+  const mat = crearMateriales()
+  const matMadera = mat.madera
+  const matCordel = mat.cordel
+  const matMetal = mat.arame
 
   const geoVerga = tuboAhusado(curvaVerga, 44, 8, (t) => VERGA.radioPie + (VERGA.radioPunta - VERGA.radioPie) * t)
   grupo.add(new Mesh(geoVerga, matMadera))
@@ -245,26 +221,14 @@ export function construirBerimbau() {
   geoFuera.rotateX(Math.PI / 2)
   geoDentro.rotateX(Math.PI / 2)
 
-  cabaza.add(new Mesh(geoFuera, new MeshPhongMaterial({ color: PALETA.cabazaFuera, shininess: 10, specular: 0x1f1810 })))
-  cabaza.add(
-    new Mesh(
-      geoDentro,
-      new MeshPhongMaterial({
-        color: PALETA.cabazaDentro,
-        map: texturaRaspado(),
-        shininess: 3,
-        specular: 0x0b0703,
-        side: DoubleSide,
-      }),
-    ),
-  )
+  cabaza.add(new Mesh(geoFuera, mat.cabazaFuera))
+  mat.cabazaDentro.side = DoubleSide
+  cabaza.add(new Mesh(geoDentro, mat.cabazaDentro))
 
   // El CANTO de la boca: el anillo que une las dos superficies. Es lo que da el
   // grosor de pared y lo que hace que la boca se lea como un borde.
-  const canto = new Mesh(
-    new RingGeometry(CABAZA.radio - CABAZA.pared, CABAZA.radio, 44),
-    new MeshPhongMaterial({ color: PALETA.canto, shininess: 16, specular: 0x4a4231, side: DoubleSide }),
-  )
+  mat.canto.side = DoubleSide
+  const canto = new Mesh(new RingGeometry(CABAZA.radio - CABAZA.pared, CABAZA.radio, 44), mat.canto)
   cabaza.add(canto)
 
   // --- la atadura -------------------------------------------------------
@@ -288,25 +252,35 @@ export function construirBerimbau() {
   }
 
   // --- la mano que toca -------------------------------------------------
-  const dobrao = new Mesh(
-    new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 16),
-    new MeshPhongMaterial({ color: PALETA.calido, shininess: 70, specular: 0x6b5a24 }),
-  )
+  const dobrao = new Mesh(new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 16), mat.dobrao)
   dobrao.position.set(...DOBRAO.posicion)
   dobrao.rotation.x = Math.PI / 2
   dobrao.rotation.z = 0.18
   grupo.add(dobrao)
 
-  const baqueta = new Mesh(
-    new CylinderGeometry(BAQUETA.radio, BAQUETA.radio * 0.78, BAQUETA.largo, 6),
-    new MeshLambertMaterial({ color: PALETA.maderaClara }),
-  )
+  const baqueta = new Mesh(new CylinderGeometry(BAQUETA.radio, BAQUETA.radio * 0.78, BAQUETA.largo, 6), mat.maderaClara)
   baqueta.position.set(...BAQUETA.posicion)
   baqueta.rotation.z = Math.PI / 2 - BAQUETA.inclinacion
   baqueta.rotation.y = 0.22
   grupo.add(baqueta)
 
-  return { grupo, cabaza }
+  // El TELON: lo que se ve al mirar hacia afuera por la boca. Va colgado del
+  // grupo de la cabaca, asi que queda solo sobre el eje de la boca sin tener
+  // que calcularlo; y va LEJOS —36 unidades— para que se lea como la vista de
+  // allá afuera y no como una calcomania pegada al cuenco.
+  //
+  // No hace falta apagarlo en el resto del viaje: en todos los demas tramos la
+  // camara mira hacia -Z y el telon le queda literalmente a la espalda. La
+  // geometria sola lo resuelve.
+  const telon = new Mesh(new PlaneGeometry(84, 63), mat.telon)
+  telon.position.set(0, 0, TELON.distancia)
+  telon.rotation.y = Math.PI // de cara al cuenco
+  telon.scale.y = 1 / CABAZA.achatado // deshace el achatado de la boca
+  telon.visible = false // hasta que llegue la imagen
+  telon.frustumCulled = false
+  cabaza.add(telon)
+
+  return { grupo, cabaza, telon, materiales: mat }
 }
 
 // Motas de luz en el vacio. Pocas y tenues: dan profundidad sin ensuciar.

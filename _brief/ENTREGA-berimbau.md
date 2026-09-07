@@ -118,6 +118,63 @@ bien.
   sin revelados y sin motas animadas.
 - **Todo el contenido como HTML de verdad**, ahora en el flujo del documento.
 
+## Materiales: el hueco medido
+
+Teníamos 353 líneas de geometría y **ningún módulo de materiales**. Ahora hay
+`src/tresd/materiales.js`. No es más geometría —la forma ya estaba resuelta desde
+que la cabaça se torneó de un perfil— es tratamiento de superficie y luz.
+
+Todas las texturas se **pintan por código** sobre un lienzo: no se descarga nada.
+El ruido va con semilla fija, así que dos capturas del mismo cuadro salen
+idénticas y el gate visual sirve de algo.
+
+- **La cabaça por dentro**, que era un degradado plano y oscuro, ahora tiene
+  raspado en anillos irregulares, gubiazos más hondos, **oclusión hacia el fondo**
+  —adentro de un cuenco la luz no llega al fondo— y una banda clara justo en el
+  borde, que es donde la luz lo lame. Los anillos van con desorden vertical
+  grande a propósito: perfectamente concéntricos se leían como rodaja de tronco.
+- **Mapa de normales** derivado del mismo campo de altura por diferencias
+  finitas. Es el paso que hace que una raya deje de ser una raya *pintada* y pase
+  a atrapar la luz. Se pinta una sola vez por superficie, en color y en gris, para
+  que relieve y color no se puedan desincronizar.
+- **La piel de afuera** tiene manchas —una calabaza seca nunca es de un solo
+  tono— y estrías por los meridianos, con algo de cera en el brillo.
+- **El canto** del corte tiene fibra: la pulpa cortada no es lisa.
+- **La verga** tiene veta a lo largo y tres nudos, con `specularMap` para que la
+  veta oscura brille menos que la clara.
+- **El arame y el dobrão** reflejan un **mapa de entorno** procedural (un cielo
+  oscuro, la clave como banda alargada y un rebote verde del monte). Eso es lo que
+  separa al alambre de una línea pintada: ahora tiene de dónde sacar un brillo que
+  le corre a lo largo.
+
+**Presupuesto, que es lo que se va a medir en el Pixel.** Mapas de color a 512,
+de relieve a 256. Y el vigilante de cuadros ahora degrada en **dos escalones**:
+primero suelta relieve y entorno de un golpe (`bajarCalidad()`), porque cuesta
+menos perder el tratamiento de superficie que perder resolución; solo si sigue
+corto baja el pixel ratio y apaga las motas. Si aun así no da, cae al 2D como
+siempre.
+
+## La ventana: al mirar afuera ahora se ve Guatoc
+
+Era mi propia observación al entregar: la boca de la cabaça daba al vacío. Ahora
+hay un **telón** con `chorrera.jpg` —el valle con la cascada entre niebla— colgado
+del grupo de la cabaça a **36 unidades** sobre el eje de la boca.
+
+La distancia es el número que decide si se lee como vista o como calcomanía; a 36
+unidades y con la boca recortándolo, se lee como el paisaje de allá afuera. Elegí
+el valle y no la bananeira porque el valle **es** una vista: la bananeira es un
+interior con una persona y a esa distancia se leería como un afiche colgado.
+
+No hay que apagarlo en el resto del viaje: en todos los demás tramos la cámara
+mira hacia −Z y el telón le queda literalmente a la espalda. La geometría sola lo
+resuelve, sin trucos de opacidad. Y la imagen **no se pide al arrancar**: se pide
+cuando el viaje pasa de 1,8, camino de la cabaça.
+
+Efecto secundario que hubo que resolver: es el único tramo con fondo claro, así
+que ahí la copia toma el mismo vidrio tintado que usa en pantalla angosta, en
+todos los anchos, y el rail lleva un vidrio tenue permanente. La tipografía se
+resuelve contra el render, y ese render mide claro.
+
 ## Los dos portales, una sola paleta
 
 El 2D pasó a la familia verde de Guatoc. Se cambiaron los **valores** de los doce
@@ -151,11 +208,14 @@ entiende `color-mix` queda un botón verde liso, no un botón sin fondo.
 1. El **precio** compartía el verde del sistema con la disponibilidad, y dentro de
    la tarjeta de precios las dos señales se anulaban. Pasó a `--c-gold`, que además
    es el dorado que el precio ya tenía en el recorrido 3D.
-2. `--c-verde` y `--c-accent` quedaron en el mismo valor: en un sitio verde, la
-   señal de «disponible» ES el color del sistema. El chip de cupos se distingue por
-   su tratamiento (píldora con borde, tinte y punto), no por el tono. Se ve, pero no
-   resalta como resaltaba el olivo sobre marrón; si el operador lo quiere más
-   fuerte, apuntar `--c-verde` a `--c-gold` es una línea.
+2. `--c-verde` quedaba con el mismo valor que `--c-accent`. **Resuelto en la pasada
+   siguiente por decisión del operador**: el aviso de cupos pasó a cálido y el token
+   dejó de llamarse «verde» conteniendo dorado. Ahora hay `--c-cupos` (cálido: el
+   aviso de disponibilidad, porque en un sitio verde un aviso del color del sistema
+   deja de avisar) y `--c-exito` (verde: el mensaje de que algo salió bien, que
+   aparece solo tras enviar y no compite con nada). Y el **precio volvió al verde
+   del sistema**: con los cupos en cálido, dejarlo dorado los volvía a confundir
+   dentro de la misma tarjeta. Los dos portales lo hacen igual.
 
 **El barrido, que es donde estaba el riesgo.** Un `grep` de `#f28c1e` no habría
 bastado: además de los cinco hex del botón había **diez literales en forma `rgb()`**
@@ -173,11 +233,9 @@ incluido el `theme-color` de la barra del navegador.
 
 ## Qué queda pendiente
 
-1. **Probar en celular real de gama media-baja.**
-2. Los tramos de adentro de la cabaça son sobrios a propósito, pero mirar hacia
-   afuera por la boca da al vacío: en la referencia, la ventana mira un planeta.
-   Si el operador quiere que ahí haya algo, es una decisión de dirección de arte,
-   no de código.
+1. **Medir los 30 fps en el Pixel**, que el operador ya autorizó. Es lo único de
+   la lista dura sin verificar, y ahora con materiales encima: si no da, el primer
+   escalón de degradación (soltar relieve y entorno) es el que hay que mirar.
 3. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador; en
    el cuerpo no se nombra la cascada.
 4. Los assets sociales (`public/og-guatoc.svg` y `.png`, `favicon.svg`) siguen en

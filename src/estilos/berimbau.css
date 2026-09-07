@@ -119,7 +119,19 @@
     transform: translateY(-50%);
   }
 
-  .viaje__rail ol { display: grid; gap: 0.1rem; padding: 0; margin: 0; list-style: none; }
+  /* Vidrio tenue permanente: en el tramo del lugar el rail queda sobre el
+     valle iluminado y sin él se pierde. */
+  .viaje__rail ol {
+    display: grid;
+    gap: 0.1rem;
+    padding: 0.45rem 0.6rem;
+    margin: 0;
+    list-style: none;
+    border: 1px solid var(--rule-soft);
+    border-radius: var(--radio);
+    background: rgb(7 16 11 / 55%);
+    backdrop-filter: blur(6px);
+  }
 
   .viaje__rail-punto {
     display: flex;
@@ -245,9 +257,9 @@
   gap: 0.5rem;
   margin-top: 1.1rem;
   padding: 0.32rem 0.9rem;
-  border: 1px solid rgb(88 227 154 / 35%);
+  border: 1px solid rgb(230 180 80 / 35%);
   border-radius: 999px;
-  color: var(--accent);
+  color: var(--warm);
   font-size: var(--t-micro);
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -255,7 +267,7 @@
 
 .viaje__precio {
   margin-top: 0.6rem;
-  color: var(--warm);
+  color: var(--accent);
   font-family: var(--display);
   font-size: clamp(3rem, 9vw, 4.6rem);
   font-weight: 800;
@@ -471,6 +483,17 @@
 
   .viaje__mestres li { gap: 0.75rem; }
   .viaje__mestre-foto img { width: 4.4rem; height: 5.2rem; }
+}
+
+/* El tramo del lugar es el único con un fondo claro: ahí la copia toma el mismo
+   vidrio tintado que usa en pantalla angosta, en todos los anchos. La tipografía
+   se resuelve contra el render, y ese render mide claro. */
+.tramo[data-tramo='lugar'] .tramo__columna {
+  padding: var(--sp-3);
+  border: 1px solid var(--rule-soft);
+  border-radius: 3px;
+  background: rgb(7 16 11 / 74%);
+  backdrop-filter: blur(12px);
 }
 
 @media (prefers-reduced-motion: reduce) {

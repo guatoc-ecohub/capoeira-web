@@ -16,10 +16,11 @@ import {
   PointLight,
   Scene,
   SRGBColorSpace,
+  TextureLoader,
   WebGLRenderer,
 } from 'three'
 
-import { CABAZA, LUZ } from './viaje.js'
+import { CABAZA, LUZ, TELON } from './viaje.js'
 import { PALETA, animarMotas, construirBerimbau, construirMotas } from './berimbau.js'
 import { crearRig } from './rig.js'
 
@@ -72,7 +73,7 @@ export function crearEscena(opciones) {
   escena.add(clave)
   escena.add(new AmbientLight(0x2a4234, LUZ.relleno))
 
-  const { grupo, cabaza } = construirBerimbau()
+  const { grupo, cabaza, telon, materiales } = construirBerimbau()
   escena.add(grupo)
 
   // La luz que entra POR la boca. Puesta justo afuera del plano de la boca, no
@@ -132,7 +133,7 @@ export function crearEscena(opciones) {
   let ventana = 0
   let lentas = 0
   let calentando = 1.5
-  let degradado = false
+  let paso = 0
 
   function vigilar(dt) {
     if (calentando > 0) {
@@ -150,8 +151,17 @@ export function crearEscena(opciones) {
       return
     }
     lentas += 1
-    if (!degradado && lentas >= 2) {
-      degradado = true
+    if (paso === 0 && lentas >= 2) {
+      // Primer escalon: se sueltan relieve y entorno. Cuesta menos perder el
+      // tratamiento de superficie que perder resolucion.
+      paso = 1
+      lentas = 0
+      materiales.bajarCalidad()
+      alDegradar()
+      return
+    }
+    if (paso === 1 && lentas >= 2) {
+      paso = 2
       lentas = 0
       pixelRatio = 1
       renderizador.setPixelRatio(pixelRatio)
@@ -160,7 +170,7 @@ export function crearEscena(opciones) {
       alDegradar()
       return
     }
-    if (degradado && lentas >= 3 && fps < 20) {
+    if (paso >= 2 && lentas >= 3 && fps < 20) {
       vivo = false
       alFallar('rendimiento')
     }
@@ -176,9 +186,29 @@ export function crearEscena(opciones) {
     const dt = Math.min((ahora - anterior) / 1000, 0.05)
     anterior = ahora
     rig.avanzar(reducirMovimiento ? 0 : dt)
+    if (!telonPedido && rig.suave > TELON.desde) pedirTelon()
     if (!reducirMovimiento && motas.visible) animarMotas(motas, dt)
     renderizador.render(escena, camara)
     vigilar(dt)
+  }
+
+  // La imagen del telon no se pide al arrancar: se pide cuando el viaje ya va
+  // camino de la cabaca. Antes de eso no se puede ver y seria peso regalado.
+  let telonPedido = false
+  function pedirTelon() {
+    if (telonPedido) return
+    telonPedido = true
+    new TextureLoader().load(
+      TELON.imagen,
+      (imagen) => {
+        imagen.colorSpace = SRGBColorSpace
+        materiales.telon.map = imagen
+        materiales.telon.needsUpdate = true
+        telon.visible = true
+      },
+      undefined,
+      () => {}, // si no llega, la boca da al vacio y ya
+    )
   }
 
   rig.avanzar(0)
@@ -201,6 +231,7 @@ export function crearEscena(opciones) {
         material.dispose()
       }
     })
+    materiales.liberar()
     renderizador.dispose()
     if (typeof renderizador.forceContextLoss === 'function') renderizador.forceContextLoss()
     if (lienzo.parentNode) lienzo.parentNode.removeChild(lienzo)

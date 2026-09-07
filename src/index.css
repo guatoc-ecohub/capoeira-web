@@ -19,7 +19,12 @@
   --c-muted: #c3d5c8;
   --c-accent: #58e39a;
   --c-gold: #e6b450;
-  --c-verde: #58e39a;
+  /* Cupos: el aviso de disponibilidad. Va en cálido porque en un sitio verde el
+     verde ES el sistema y un aviso del color del sistema deja de avisar. */
+  --c-cupos: #e6b450;
+  /* Éxito: el mensaje de que algo salió bien. Ese sí es verde en cualquier
+     sitio, y no compite con nada porque aparece solo tras enviar. */
+  --c-exito: #58e39a;
   /* El error se queda cálido: tiene que verse como error, no como parte del
      sistema. Es el único color que no es de la familia, a propósito. */
   --c-danger: #e4674a;
@@ -33,7 +38,7 @@
   --c-text-rgb: 240 246 241;
   --c-accent-rgb: 88 227 154;
   --c-gold-rgb: 230 180 80;
-  --c-verde-rgb: 88 227 154;
+  --c-cupos-rgb: 230 180 80;
   --radio: 14px;
   --sp-1: 0.5rem;
   --sp-2: 1rem;
@@ -127,7 +132,7 @@ button, input { font: inherit; }
 .hero__linea--contorno { color: transparent; -webkit-text-stroke: 1.5px var(--c-text); }
 .hero__linea--brasa { color: var(--c-accent); text-shadow: 0 0 60px rgb(var(--c-accent-rgb) / 30%); }
 .hero__subtitulo { max-width: 43ch; margin-bottom: var(--sp-3); color: var(--c-muted); font-size: clamp(1.05rem, 2.4vw, 1.3rem); }
-.hero__cupos { display: inline-flex; align-items: center; gap: 0.55rem; margin-bottom: var(--sp-3); padding: 0.4rem 1rem; border: 1px solid rgb(var(--c-verde-rgb) / 45%); border-radius: 999px; background: rgb(var(--c-verde-rgb) / 10%); color: var(--c-verde); font-size: 0.9rem; font-weight: 700; }
+.hero__cupos { display: inline-flex; align-items: center; gap: 0.55rem; margin-bottom: var(--sp-3); padding: 0.4rem 1rem; border: 1px solid rgb(var(--c-cupos-rgb) / 45%); border-radius: 999px; background: rgb(var(--c-cupos-rgb) / 10%); color: var(--c-cupos); font-size: 0.9rem; font-weight: 700; }
 .hero__cupos::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
 .hero__cta { display: flex; gap: var(--sp-2); flex-wrap: wrap; }
 .hero__corte { position: absolute; right: 0; bottom: -1px; left: 0; height: 3.2rem; background: var(--c-bg-alt); clip-path: polygon(0 100%, 100% 0, 100% 100%); pointer-events: none; }
@@ -182,23 +187,23 @@ button, input { font: inherit; }
 
 .precios__principal { display: grid; grid-template-columns: 1fr; gap: var(--sp-3); padding: var(--sp-3); border: 1px solid var(--c-accent); border-radius: var(--radio); background: radial-gradient(100% 100% at 100% 0%, rgb(var(--c-accent-rgb) / 13%), transparent 65%), var(--c-surface); box-shadow: 0 12px 40px #00000040; }
 .precios__etiqueta { color: var(--c-gold); font-size: 0.78rem; font-weight: 800; letter-spacing: 0.18em; text-transform: uppercase; }
-/* El precio va en dorado, no en el verde del sistema: dentro de la tarjeta
-   compartía color con la disponibilidad y los dos señales se anulaban. Además
-   es el mismo dorado que ya usa el precio en el recorrido 3D. */
-.precios__reserva { margin-top: 0.2rem; color: var(--c-gold); font-family: var(--display); font-size: clamp(3.5rem, 13vw, 5rem); font-weight: 800; line-height: 0.95; }
+/* Precio en el verde del sistema y cupos en cálido, no al revés: dentro de la
+   tarjeta las dos señales tienen que distinguirse, y el aviso de escasez es el
+   que gana con el cálido. Los dos portales lo hacen igual. */
+.precios__reserva { margin-top: 0.2rem; color: var(--c-accent); font-family: var(--display); font-size: clamp(3.5rem, 13vw, 5rem); font-weight: 800; line-height: 0.95; }
 .precios__detalle { margin-top: 0.5rem; color: var(--c-text); font-weight: 600; }
 .precios__total { margin-top: 0.7rem; color: var(--c-muted); font-size: 0.88rem; }
 .precios__total strong { color: var(--c-text); }
 .cupos { align-self: end; }
 .cupos__texto { font-family: var(--display); font-size: 1.45rem; font-weight: 700; text-transform: uppercase; }
-.cupos__texto strong { color: var(--c-verde); }
+.cupos__texto strong { color: var(--c-cupos); }
 .cupos__barra { height: 0.7rem; margin: 0.75rem 0 0.4rem; overflow: hidden; border-radius: 999px; background: var(--c-bg); }
-.cupos__barra span { display: block; height: 100%; border-radius: inherit; background: var(--c-verde); }
-.cupos p { color: var(--c-verde); font-size: 0.9rem; font-weight: 700; }
+.cupos__barra span { display: block; height: 100%; border-radius: inherit; background: var(--c-cupos); }
+.cupos p { color: var(--c-cupos); font-size: 0.9rem; font-weight: 700; }
 .precios__early { margin: var(--sp-3) 0 var(--sp-2); color: var(--c-gold); font-family: var(--display); font-size: 1.45rem; font-weight: 700; text-transform: uppercase; }
 .cohortes { display: grid; grid-template-columns: 1fr; gap: var(--sp-2); }
 .cohorte-card { padding: var(--sp-2); border: 1px solid var(--c-line); border-radius: var(--radio); background: var(--c-surface); opacity: 0.62; }
-.cohorte-card[data-activa='true'] { border-color: var(--c-verde); opacity: 1; box-shadow: 0 0 0 1px var(--c-verde); }
+.cohorte-card[data-activa='true'] { border-color: var(--c-accent); opacity: 1; box-shadow: 0 0 0 1px var(--c-accent); }
 .cohorte-card__top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; color: var(--c-muted); font-family: var(--display); font-size: 1.4rem; }
 .cohorte-card h3 { margin: 1rem 0 0.3rem; font-size: 1.35rem; }
 .cohorte-card__detalle { color: var(--c-muted); font-size: 0.85rem; }
@@ -218,7 +223,7 @@ button, input { font: inherit; }
 .campo input:focus { border-color: var(--c-accent); outline: none; }
 .campo input[aria-invalid='true'] { border-color: var(--c-danger); }
 .campo__error { color: var(--c-danger); font-size: 0.82rem; font-weight: 600; }
-.reserva-form__estado { min-height: 1.5rem; color: var(--c-verde); font-size: 0.9rem; }
+.reserva-form__estado { min-height: 1.5rem; color: var(--c-exito); font-size: 0.9rem; }
 
 .pie { padding: var(--sp-5) 0 var(--sp-4); border-top: 1px solid var(--c-line); text-align: center; }
 .pie__marca { margin-bottom: 0.35rem; color: var(--c-text); font-family: var(--display); font-size: 1.7rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }

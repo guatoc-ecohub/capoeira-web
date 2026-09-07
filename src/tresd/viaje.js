@@ -44,6 +44,10 @@ export const CABAZA = {
   giro: [0.06, -0.12, 0.1],
 }
 
+// El telon de Guatoc, mas alla de la boca. La distancia es el numero que decide
+// si se lee como vista o como calcomania.
+export const TELON = { distancia: 36, imagen: '/guatoc/chorrera.jpg', desde: 1.8 }
+
 export const CORDINHA = { y: -4.2, radio: 0.3, tubo: 0.04 }
 export const DOBRAO = { posicion: [-0.2, -3.2, 0.05], radio: 0.24, grosor: 0.035 }
 export const BAQUETA = { posicion: [0.55, -3.5, 0.45], largo: 3.2, radio: 0.04, inclinacion: 0.26 }
