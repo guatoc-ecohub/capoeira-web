@@ -45,7 +45,7 @@ export const contenido = {
         nombre: 'C.m. Vermelho',
         disciplinas: ['BJJ', 'Muay Thai'],
         descripcion: 'Entrenamiento de BJJ y Muay Thai, enfocada a la capoeira: cómo se utilizan las diferentes técnicas en capoeira sin salirse de su contexto.',
-        foto: '/instructores/vermelho.jpg',
+        foto: '/instructores/vermelho.png',
         fotoAlt: 'C.m. Vermelho en el gimnasio',
       },
       {
@@ -53,7 +53,7 @@ export const contenido = {
         nombre: 'C.m. Águila',
         disciplinas: ['Kick Boxing', 'Capoeira'],
         descripcion: 'Entrenamiento de Kick Boxing y capoeira, enfoque y aplicación a la capoeira competitiva y estrategia manteniendo su objetividad.',
-        foto: '/instructores/aguila.jpg',
+        foto: '/instructores/aguila.png',
         fotoAlt: 'Fotografía de C.m. Águila pendiente',
       },
       {
@@ -61,7 +61,7 @@ export const contenido = {
         nombre: 'Profesor Capeta',
         disciplinas: ['Boxeo', 'Capoeira'],
         descripcion: 'Entrenamiento de boxeo aplicado a la capoeira, aplicación de técnicas sin salir del contexto del jogo.',
-        foto: '/instructores/capeta.jpg',
+        foto: '/instructores/capeta.png',
         fotoAlt: 'Tarjeta de Profesor Capeta en el Campeonato Sudamericano Lima 2025',
       },
     ],
