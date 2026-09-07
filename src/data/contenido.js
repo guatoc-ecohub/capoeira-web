@@ -134,12 +134,12 @@ export const contenido = {
   // adorno: donde no existe un rótulo honesto, la parada va sin rótulo. Los
   // rótulos salen de los eyebrow que la página 2D ya usa, o de las artes
   // marciales cuando la parada habla de entrenamiento.
-  // El orden de `paradas` es el mismo de CAMARA en src/tresd/paradas.js.
+  // El orden de `paradas` es el mismo de BEATS y CAMERA_KEYS en src/tresd/viaje.js.
   berimbau: {
     marca: 'Guatoc Capoeira',
     titulo: 'El berimbau manda',
     cargando: 'Templando el arame…',
-    pista: 'Use las flechas, la rueda o el rail para recorrer el instrumento.',
+    pista: 'Baje para recorrer el instrumento: el berimbau lleva el campamento adentro.',
     railAria: 'Paradas del recorrido por el berimbau',
     paradaAria: 'Contenido de la parada',
     paradaDe: 'Parada',

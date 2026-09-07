@@ -1,194 +1,142 @@
-# Entrega — Berimbau 3D del Campamento de Capoeira
+# Entrega — El viaje por el berimbau
 
 Rama `berimbau-3d-20260906`. `npm run build` compila limpio.
-Capturas del gate GPU real (Quadro M6000, `shot3d --headed`): 0 errores de página,
-0 de consola, 0 request fallidos en las seis paradas, en 1280x800 y en 390x844.
+Verificado con el gate GPU real (`shot3d --headed`, Quadro M6000): los seis tramos
+en 1280x800 y en 390x844, y el camino al 2D por clic. 0 errores de página, 0 de
+consola, 0 request fallidos.
 
-## Segunda pasada: lo que cambió
+## Lo que se rehízo, y por qué
 
-1. **Paleta de Guatoc.** Fuera la familia brasa. Los tokens (`--bg #07100b`,
-   `--ink`, `--ink-soft`, `--ink-quiet`, `--accent #58e39a`, `--accent-dim`,
-   `--warm #e6b450`) se declaran en `.berimbau` dentro de `src/estilos/berimbau.css`
-   y se repiten en `PALETA` de `src/tresd/berimbau.js` para la escena. Se respeta
-   la disciplina del sitio hermano: **el acento es para figuras, índices y estados
-   activos, nunca para párrafos**. La madera conserva tono de madera real y convive
-   con el verde por un contraluz verde en la escena; el dorado va al arame y al
-   dobrão. ⚠️ **La página 2D sigue con la paleta brasa** (`src/index.css`): el
-   encargo acotaba el cambio a `berimbau.css` y a la escena, y ese archivo lo está
-   tocando el otro carril. Unificarla es cambiar los tokens de `:root` al juntar.
-2. **Fuera el precio de la entrada.** `hero.reservaCta` es «Reservar cupo», sin
-   cifra, y el botón de la primera parada lleva a la parada de reservar, que es
-   donde vive el precio. El 2D hereda el mismo cambio.
-3. **El berimbau ahora se lee como berimbau.** Ver abajo.
-4. **Las fotos salieron del instrumento.** No queda un solo plano de foto en la
-   geometría. Van en los paneles del recorrido.
-5. **El recorrido carga toda la información.** Seis paradas y el formulario dentro.
+El modelo anterior estaba mal planteado, no mal pulido. Se estudió
+`vive-hero.vercel.app` (en disco; su licencia permite estudiarlo e implementar las
+ideas de forma independiente — **no se copió código**) y se rehízo con ese modelo.
 
-## Que el instrumento se lea de un vistazo
+**1. Un solo barrido continuo, sin cortes ni botones.** La posición del scroll ES
+la posición del viaje. Se fueron los botones «parada anterior / siguiente» y el
+salto discreto: la cámara vuela mientras la copia sube. El viaje es el
+instrumento entero en el vacío → se baja por la verga → se pasa por la mano que
+toca → se ENTRA por la boca de la cabaça → se recorre la cámara de resonancia por
+dentro → se mira hacia afuera por la boca → se sale.
 
-- **El arame tensa.** Es cuerda recta de punta a punta, en dorado y con grosor de
-  lectura (0,055 de radio: un arame real sería invisible a esta escala). La flecha
-  del arco pasó a 2,2 sobre 16 de largo, así que entre madera y cuerda queda el
-  **triángulo largo y estrecho** que hace reconocible al instrumento. La verga se
-  abre porque el arame la dobla, y los amarres de las dos puntas marcan de dónde
-  tira.
-- **La cabaça es una calabaza cortada, no un globo.** Bajó de radio 1,7 a 1,25
-  (más esbelto el conjunto, y el pie de la verga vuelve a asomar por debajo). El
-  **corte** es un anillo grueso y pálido —la pulpa recién cortada es lo más claro
-  de la calabaza— alrededor de una cavidad oscura: ese contraste es lo que separa
-  una vasija abierta de una bola. Tiene cuello en el fondo cerrado.
-- **La atadura se ve.** La cordinha abraza la verga al filo de la cabaça, en verde
-  del sitio, y de ella bajan dos cabos que se meten detrás del cuenco.
-- **Fuera las órbitas.** Los anillos de roda alrededor de la cabaça ya no existen.
+**2. La copia dejó de ser un panel fijo al costado.** Va en el flujo del
+documento, tramo por tramo, anclada a la parte del instrumento que la cámara tiene
+delante. El 3D dejó de ser fondo decorativo: es lo que se recorre.
 
-## Las seis paradas (qué, cuándo, quiénes, qué se entrena, dónde, cómo)
+**3. Interpolación LINEAL entre claves, con suavizado. No splines.** Es
+exactamente el error que yo había cometido: un Catmull-Rom por estas claves se pasa
+de largo en los pares que están cerca —los de la entrada a la cabaça— y mete la
+cámara dentro de la pared. Yo peleé con eso moviendo claves; la solución era la
+interpolación.
 
-| # | Rótulo | Parada | Qué lleva |
-|---|---|---|---|
-| 1 | 10 · 11 · 12 OCT 2026 · GUATOC · COLOMBIA | El campamento | Tagline, cupos, botón de reserva sin cifra |
-| 2 | El encuentro | Tres días, dos rodas | La agenda completa de los tres días |
-| 3 | Quienes guían el jogo | Los mestres | Las tres fichas **con sus fotos** |
-| 4 | BJJ · Muay Thai · Kick Boxing · Boxeo | **Las artes marciales** | Las cuatro artes, **con quién dicta cada una** |
-| 5 | *(sin rótulo)* | El lugar | Las dos sedes + el material de Guatoc |
-| 6 | Asegure su lugar | Reservar el cupo | Precio, total, cupos, cohortes **y el formulario** |
+**4. Diez claves para seis tramos**, en posiciones fraccionarias (0, 1, 2, 2.55,
+2.82, 3, 3.55, 4, 4.6, 5). Las intermedias se concentran donde el camino es
+delicado: entrar por la boca y girar dentro del cuenco.
 
-**Los toques de capoeira salieron del recorrido.** Eran bonitos pero decorativos: no
-correspondían a nada de lo que va a pasar en el campamento. Lo que se enseña son
-artes marciales aplicadas al jogo, y eso es lo que rotula ahora.
+**5. Todo se DERIVA de la posición del viaje; nada se acumula.** Llegar a 3,2
+retrocediendo da el mismo cuadro que llegar avanzando. Lo único con memoria es el
+amortiguado, y con `dt = 0` se anula.
 
-Se hicieron las dos cosas, porque una sin la otra dejaba el defecto a medias:
+**6. El patrón `fit`.** Cada clave decide cómo paga una pantalla angosta: cerca de
+1 se retrocede sobre el eje de vista; en 0 se paga solo abriendo el campo. Adentro
+de la cabaça es 0 — retroceder ahí saca la cámara por detrás de la pared. Reemplaza
+el `setViewOffset` y el dolly manual que yo tenía.
 
-- **La parada de técnica pasó a ser la sección de las artes marciales.** Se llama
-  «Las artes marciales», la rotulan las cuatro (BJJ · Muay Thai · Kick Boxing ·
-  Boxeo) y cada bloque dice **quién la dicta** y para qué sirve en la roda: BJJ y
-  Muay Thai con C.m. Vermelho, Kick Boxing con C.m. Águila, Boxeo con Profesor
-  Capeta. Ahí el rótulo sí es información.
-- **El rótulo dejó de ser una etiqueta fija.** Cada parada lleva el que dice lo que
-  esa parada es, y todos salen de texto que ya existía: los `eyebrow` que la página
-  2D usa («El encuentro», «Quienes guían el jogo», «Asegure su lugar») y el kicker
-  de fechas del hero, que además se quitó del cuerpo para no repetirlo.
+**7. Cero layout en el camino del scroll.** Las anclas de las secciones y el tamaño
+del lienzo se miden aparte y solo al cambiar el viewport; cada cuadro lee
+únicamente `window.scrollY` antes de escribir.
 
-**Nada de esto se escribió a mano.** El rótulo de las artes se arma con
-`tecnica.bloques.map(b => b.titulo)`, y quién dicta cada una se cruza contra las
-`disciplinas` de cada ficha —texto dictado por el operador— con `quienDicta()`. No
-hay lista paralela que se pueda desincronizar, y si un arte no apareciera en ninguna
-ficha no se inventa un profesor: no se muestra la línea.
+**8. La capa editorial no toca nada.** `src/tresd/editorial.js` solo lee el scroll:
+ni el mundo, ni el rig, ni el bucle. Degrada a «visible y quieto» — la clase `js`
+es lo único que arma los revelados, así que si ese archivo falla la página está
+toda ahí igual.
 
-**La parada del lugar quedó sin rótulo, a propósito.** No hay uno honesto para ella
-y prefiero dejarla sin él antes que colgarle un arte marcial que no le corresponde,
-que sería el mismo defecto decorativo con otra palabra. Se ve bien: el título entra
-directo a la entradilla.
+## La calidad del objeto
 
-En el rail, donde iba el nombre del toque va ahora el número de parada (01 a 06),
-que es información real: el orden del recorrido. El enganche de audio también dejó
-de colgarse de los toques y va por parada.
+La cabaça anterior se leía como un tambor visto de frente. Ahora:
 
-## El material de Guatoc
+- Se **tornea de un perfil dibujado a mano** (`PERFIL` en `berimbau.js`): más ancha
+  justo debajo del borde, cerrando en panza redonda. Ahí —y no en más polígonos—
+  está la diferencia entre una calabaza y un casquete.
+- Tiene **pared con grosor**: dos superficies torneadas más un anillo de canto que
+  las une. El perfil interior sale de desplazar el exterior por su propia normal,
+  así que la pared es de grosor constante y no una copia escalada.
+- **Boca ovalada** y ligeramente ladeada.
+- **Luz de una sola dirección** más un relleno bajo, y una luz cálida que entra POR
+  la boca con alcance corto, para que el fondo del cuenco quede más oscuro que el
+  borde.
 
-Todo vive en la parada del LUGAR, repartido por lo que cada pieza cuenta. **No hay
-un solo hueco de «Foto pendiente»**: lo que no exista no se pinta, y la sección se
-acomoda a lo que haya (`grid-template-columns: repeat(auto-fit, ...)`).
+Presupuesto: ~2.800 triángulos, una docena de llamadas de dibujo. Menos geometría
+que antes, mejor resuelta.
 
-**Dos protagonistas, grandes y lado a lado** (`medios.destacados`):
+## Archivos
 
-- `domo-bananeira.jpg` — la pieza fuerte. Dice de un golpe las tres cosas: que aquí
-  se practica capoeira, que el lugar es este y que la cascada está al frente.
-- `chorrera-loop.mp4` — el agua cayendo, viva.
+| Archivo | Qué hace |
+|---|---|
+| `src/tresd/viaje.js` | El viaje en unidades del mundo: tramos, medidas y las diez claves. Manda el ORDEN. |
+| `src/tresd/rig.js` | La cámara: muestreo lineal con suavizado, patrón `fit`, amortiguado, derivación desde las anclas. |
+| `src/tresd/berimbau.js` | La geometría, con la cabaça torneada de perfil. |
+| `src/tresd/escena.js` | Mundo y bucle. Único que importa three, siempre por `import()` dinámico. |
+| `src/tresd/editorial.js` | Revelados y punto activo del rail. Solo lee scroll. |
+| `src/components/Berimbau3D.jsx` | El documento: seis secciones en flujo, una por tramo. |
 
-Las dos son verticales y **casi de la misma proporción** (0,563 y 0,5625), así que
-en una pareja de tarjetas 9/16 entran **enteras, sin recorte**. Eso importa sobre
-todo para la de bananeira: el valle va a la izquierda y el cuerpo al centro, y
-cualquier recorte lateral se come una de las dos cosas. Por eso no va a miniatura
-ni a franja apaisada.
+`src/tresd/paradas.js` se eliminó: su papel lo cumple `viaje.js`.
 
-**Tres de apoyo, en miniatura dentro del panel** (`medios.apoyo`):
+**Una sola fuente de orden.** Las secciones se arman recorriendo `BEATS` y buscando
+su copia por `id`. Cuando el orden vivía en dos sitios se desalinearon —la cámara
+entraba a la cabaça mientras el texto hablaba de las artes marciales— y ahora eso es
+imposible por construcción. Consecuencia: el contenido quedó con **técnica antes que
+mestres**, que es el orden que pide la geometría (la mano que toca → las artes; la
+cámara de resonancia → los tres que guían).
 
-- `domo-interior.jpg` — el espacio donde se entrena, de pareja con la de bananeira:
-  una enseña el sitio y la otra el sitio en uso.
-- `domo-terraza-niebla.jpg` — atmósfera, no información. No explica nada.
-- `chorrera.jpg` — el valle desde el filo, con la cascada entre niebla.
+## Un defecto que casi «arreglo» sin serlo
 
-Las miniaturas van en formato **vertical (4/5)**, que es el de las fotos del domo:
-recortarlas a apaisado les come la estructura triangular.
+En las capturas se veía una línea dorada cruzando la cavidad de la cabaça, y todo mi
+razonamiento decía que era el arame dibujándose por delante. Antes de tocar nada hice
+una prueba con colores testigo: arame magenta, interior azul. El arame quedó
+**correctamente oculto** por la calabaza. La línea era una costura de la textura de
+raspado, que se envolvía dos veces alrededor del eje; se quitó la repetición y
+desapareció. Si me hubiera fiado del razonamiento habría movido geometría que estaba
+bien.
 
-**El clip.** Capa HTML encima del canvas, nunca textura WebGL: `muted loop
-playsinline preload="none"`, arrancado a mano al llegar a la parada. Con
-`prefers-reduced-motion` o si la reproducción falla, queda el póster, que es el
-mismo encuadre: el cambio no mueve la composición. **Ya no lleva ningún velo
-encima**: los degradados de legibilidad que le había puesto arriba y abajo eran lo
-que lo dejaba lavado contra el fondo verde. El velo que queda es sobre el canvas 3D,
-y bajó del 78 % al 42 % — lo justo para que la calabaza no compita.
+## Lo que no cambió
 
-**Peso y carga.** El material de Guatoc suma 1,1 MB. Ninguno de esos bytes se pide
-hasta que el visitante llega a la parada del lugar: tanto la pareja de destacados
-como las miniaturas del panel solo se montan cuando esa parada está activa, y las
-miniaturas van además con `loading="lazy"` y `decoding="async"`. Todas las imágenes
-llevan `width`/`height` para que no salte el layout.
+- **El fallback y su detección temprana.** Sigue siendo la primera decisión de la
+  app, antes del primer pintado y sin tocar three: sin WebGL, GPU por software,
+  `MAX_TEXTURE_SIZE<2048`, ahorro de datos o menos de 1 GB de memoria → arranca en
+  2D. El motor sigue en chunk aparte (475 kB, 121 kB gzip) por `import()` dinámico.
+  Más 9 s de espera máxima, contexto perdido, y el vigilante de cuadros que primero
+  baja el pixel ratio y apaga las motas y solo después cae al 2D. El botón «Ver todo
+  en texto» sigue siempre visible; probado con clic real.
+- **La paleta verde de Guatoc**, con el acento reservado a figuras e índices.
+- **Las artes marciales rotulando**, y quién dicta cada una cruzado contra las
+  `disciplinas` de cada ficha.
+- **El material de Guatoc donde estaba**: la bananeira y el clip como la ventana del
+  tramo del lugar, y las tres de apoyo en fila. El clip sigue siendo capa HTML,
+  nunca textura WebGL, con `preload="none"`; ahora además solo corre mientras su
+  tramo está en pantalla. Nada de huecos de «Foto pendiente».
+- **`prefers-reduced-motion`**: sin amortiguado (la cámara sigue el scroll clavada),
+  sin revelados y sin motas animadas.
+- **Todo el contenido como HTML de verdad**, ahora en el flujo del documento.
 
-**Las fotos de los instructores** (`public/instructores/*.png`) entran en la parada
-de los mestres. Siguen fuera del repo por `.gitignore` (fotos de personas): están en
-el deploy y en el worktree, no en el commit. Si alguna no cargara, la ficha ocupa el
-ancho sola — nunca un recuadro punteado.
+## Rendimiento
 
-## Fallback (sin cambios de fondo)
-
-Sigue siendo la primera decisión de la app, antes del primer pintado y sin tocar
-three: sin WebGL, GPU por software, `MAX_TEXTURE_SIZE<2048`, ahorro de datos o
-menos de 1 GB de memoria → arranca en 2D. El motor sigue en chunk aparte (476 kB,
-122 kB gzip) por `import()` dinámico, verificado ausente de `index.html`. Además:
-9 s de espera máxima, contexto perdido, y el vigilante de cuadros que primero baja
-el pixel ratio y apaga las motas, y solo después cae al 2D. Botón «Ver todo en
-texto» siempre visible.
-
-**Nuevo**: en celular, mientras el clip tapa el canvas entero, el bucle de dibujo se
-**pausa** (se deja el rAF vivo para volver sin tirón). Dibujar debajo de un video que
-corre es justo lo que tumba los cuadros en gama media.
-
-## Encuadre: se mueve la proyección, no la cámara
-
-El panel tapa media pantalla —a la izquierda en ancho, abajo en angosto— así que el
-encuadre se corre con `camera.setViewOffset`, no moviendo la cámara. Así el punto de
-vista no cambia, la perspectiva no se deforma y, sobre todo, **la cámara no se sale
-de la cabaça** al corregir el encuadre en vertical. En angosto se retrocede además
-lo justo para que el instrumento entre completo en la mitad de arriba, y ese
-retroceso se apaga solo (de forma continua) cuando el sujeto está cerca.
-
-## Defectos que encontré mirando las capturas por regiones
-
-Ninguno de estos se vio a simple vista; salieron con lupa al 240 %:
-
-1. La cordinha metía su arco delantero **dentro** del cuenco: desde la parada de
-   reserva se veía como un tubo verde cruzando la pantalla.
-2. El cuello de la calabaza asomaba por dentro del fondo, como un bulto pegado.
-3. El raspado interior, con rayas marcadas, hacía que la cabaça se leyera como una
-   **rodaja de tronco**. Rayas más finas, menos contraste y una sombra hacia el fondo.
-4. En vertical le faltaba la punta al instrumento por unos pocos por ciento.
-5. La marca y el botón se perdían sobre el agua clara del clip: velo arriba.
-6. Con seis paradas la columna de puntos del rail se montaba sobre el panel, y
-   con el material del lugar se montaba encima de las fotos. En celular pasó a ser
-   una **fila de puntos justo encima del panel**, que es el patrón que corresponde
-   ahí y no choca con nada.
-7. Los atributos `width`/`height` del `<img>` le ganaban a `aspect-ratio` porque
-   nadie soltaba la altura: las miniaturas salían estiradas. `height: auto` no
-   sobra en esa regla.
-
-## Rendimiento (lo medido y lo no medido)
-
-- ~2.400 triángulos, una docena de llamadas de dibujo, 4 luces, sin sombras ni
-  post-proceso. Pixel ratio tope 1,5.
-- **Medido**: 60 fps (tope de vsync) en la Quadro M6000 del gate.
-- **NO medido**: Mali-G78. No hay celular en este carril. Sigue siendo lo primero
-  que hay que probar en el aparato, y ahora con el clip corriendo encima.
+- ~2.800 triángulos, una docena de llamadas de dibujo, 2 luces de escena más la de
+  la boca, sin sombras ni post-proceso. Pixel ratio tope 1,5.
+- **NO medido: Mali-G78.** No hay celular en este carril. Sigue siendo lo primero
+  que hay que probar en el aparato.
 
 ## Qué queda pendiente
 
-1. **Probar en celular real de gama media-baja**, con el clip.
-2. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador;
-   en el cuerpo no se nombra la cascada (solo el pie de foto dice «La Chorrera entre
-   niebla»). Si quieren nombrarla en el texto, es una línea en `contenido.js`.
-3. Unificar la paleta de la página 2D con la de Guatoc.
-4. `package-lock.json` sigue sin `three`: `npm install` acá escribiría en el
+1. **Probar en celular real de gama media-baja.**
+2. Los tramos de adentro de la cabaça son sobrios a propósito, pero mirar hacia
+   afuera por la boca da al vacío: en la referencia, la ventana mira un planeta.
+   Si el operador quiere que ahí haya algo, es una decisión de dirección de arte,
+   no de código.
+3. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador; en
+   el cuerpo no se nombra la cascada.
+4. Unificar la paleta de la página 2D (sigue en la familia brasa de `index.css`).
+5. `package-lock.json` sigue sin `three`: `npm install` acá escribiría en el
    `node_modules` compartido con el otro carril. Toca `npm install --package-lock-only`
    al juntar.
-5. El hook `orchestrator-edit-guard.sh` bloquea `Write`/`Edit` en esta sesión pese a
+6. El hook `orchestrator-edit-guard.sh` bloquea `Write`/`Edit` en esta sesión pese a
    ser el carril de implementación; todo esto se escribió por Bash.

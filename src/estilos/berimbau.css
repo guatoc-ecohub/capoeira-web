@@ -1,12 +1,12 @@
-/* Recorrido 3D del berimbau.
+/* El viaje por el berimbau.
    Paleta de Guatoc: verde casi negro de fondo, tres luminancias de un mismo
    blanco verdoso para la tinta, la clorofila encendida como acento y el dorado
-   del atardecer para lo cálido puntual. El acento es para figuras, índices y
-   estados activos: nunca para párrafos.
-   Vive aparte de index.css porque es una experiencia completa, no una sección
-   más de la página. */
+   para lo cálido puntual. El acento es para figuras, índices y estados activos:
+   nunca para párrafos.
+   La copia va en el flujo del documento y sube con el scroll; el lienzo va fijo
+   detrás. No hay panel al costado ni botones de parada. */
 
-.berimbau {
+.viaje {
   --bg: #07100b;
   --ink: #f0f6f1;
   --ink-soft: #c3d5c8;
@@ -14,464 +14,412 @@
   --accent: #58e39a;
   --accent-dim: #2e9463;
   --warm: #e6b450;
-  --rule: rgb(195 213 200 / 20%);
-  --rule-soft: rgb(195 213 200 / 11%);
-  --glass: rgb(7 16 11 / 88%);
-  --glass-quiet: rgb(7 16 11 / 62%);
+  --rule: rgb(195 213 200 / 18%);
+  --rule-soft: rgb(195 213 200 / 9%);
+  --glass: rgb(7 16 11 / 72%);
 
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
+  /* Una sola escala tipográfica para todo el viaje. */
+  --t-display: clamp(2.5rem, 6.2vw, 4.6rem);
+  --t-titulo: clamp(1.35rem, 2vw, 1.75rem);
+  --t-lede: clamp(1.05rem, 1.35vw, 1.28rem);
+  --t-body: clamp(0.95rem, 1.05vw, 1.05rem);
+  --t-micro: clamp(0.66rem, 0.78vw, 0.76rem);
+
+  position: relative;
+  z-index: 0;
   background: var(--bg);
   color: var(--ink);
 }
 
-.berimbau__escena {
-  position: absolute;
+.viaje ::selection { background: rgb(88 227 154 / 30%); color: var(--ink); }
+.viaje :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+/* El lienzo va fijo: la página scrollea por encima de él. */
+.viaje__escena {
+  position: fixed;
   inset: 0;
-  touch-action: none;
-}
-
-.berimbau__lienzo {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.berimbau ::selection { background: rgb(88 227 154 / 30%); color: var(--ink); }
-.berimbau :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-
-.berimbau__marca {
-  position: absolute;
-  top: var(--sp-2);
-  left: var(--sp-2);
-  z-index: 4;
-  text-shadow: 0 1px 10px var(--bg), 0 0 3px var(--bg);
+  z-index: 0;
   pointer-events: none;
 }
 
-.berimbau__marca-nombre {
+.viaje__lienzo { display: block; width: 100%; height: 100%; }
+
+/* ----------------------------------------------------------------- cromo */
+
+.viaje__marca {
+  position: fixed;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 4;
+  text-shadow: 0 1px 12px var(--bg), 0 0 3px var(--bg);
+  pointer-events: none;
+}
+
+.viaje__marca-nombre {
   color: var(--ink);
   font-family: var(--display);
-  font-size: 1.15rem;
+  font-size: 1.05rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-.berimbau__marca-lema {
+.viaje__marca-lema {
   color: var(--accent);
-  font-size: 0.74rem;
+  font-size: var(--t-micro);
   font-weight: 700;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 
-.berimbau__texto-boton {
-  position: absolute;
+.viaje__texto-boton {
+  position: fixed;
   top: var(--sp-2);
   right: var(--sp-2);
   z-index: 5;
-  padding: 0.5rem 0.95rem;
+  padding: 0.45rem 0.9rem;
   border-color: var(--rule);
   background: var(--glass);
   color: var(--ink);
-  font-size: 0.85rem;
+  font-size: var(--t-micro);
   backdrop-filter: blur(8px);
 }
 
-.berimbau__texto-boton:hover { border-color: var(--accent); background: var(--glass); }
+.viaje__texto-boton:hover { border-color: var(--accent); }
 
-.berimbau__cargando,
-.berimbau__aviso {
-  position: absolute;
+.viaje__cargando,
+.viaje__aviso {
+  position: fixed;
   left: 50%;
   z-index: 5;
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 1rem;
   border: 1px solid var(--rule);
   border-radius: 999px;
   background: var(--glass);
   color: var(--ink-soft);
-  font-size: 0.85rem;
+  font-size: var(--t-micro);
   transform: translateX(-50%);
+  backdrop-filter: blur(8px);
 }
 
-.berimbau__cargando { top: 50%; }
-.berimbau__aviso { bottom: calc(var(--sp-2) + 0.4rem); }
+.viaje__cargando { top: 50%; }
+.viaje__aviso { bottom: 1rem; }
 
-/* --------------------------------------------- material de Guatoc, capa HTML */
-/* El clip nunca es textura WebGL. En celular llena la franja de canvas que deja
-   el panel; en pantalla ancha va encuadrado en vertical, que es como está
-   filmado, sin estirarlo ni recortarle la caída al agua. */
+/* ------------------------------------------------------------------ rail */
 
-/* Velo flojo sobre el canvas mientras se muestra el lugar: lo justo para que la
-   calabaza no compita con las fotos, sin apagarlas. Un velo fuerte dejaba el
-   agua sin fuerza contra el fondo verde. NADA de velos encima del material:
-   los degradados de legibilidad que iban sobre el clip lo lavaban. */
-.berimbau__velo {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  background: rgb(7 16 11 / 42%);
-  pointer-events: none;
+.viaje__rail { display: none; }
+
+@media (min-width: 800px) {
+  .viaje__rail {
+    position: fixed;
+    top: 50%;
+    right: var(--sp-3);
+    z-index: 4;
+    display: block;
+    transform: translateY(-50%);
+  }
+
+  .viaje__rail ol { display: grid; gap: 0.1rem; padding: 0; margin: 0; list-style: none; }
+
+  .viaje__rail-punto {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.35rem 0.2rem;
+    color: var(--ink-quiet);
+    text-decoration: none;
+  }
+
+  .viaje__rail-marca {
+    flex: none;
+    width: 9px;
+    height: 9px;
+    border: 1px solid currentcolor;
+    border-radius: 50%;
+    transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  }
+
+  .viaje__rail-texto { display: flex; flex-direction: column; line-height: 1.15; }
+
+  .viaje__rail-indice {
+    color: var(--accent);
+    font-family: var(--display);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+
+  .viaje__rail-titulo {
+    font-family: var(--display);
+    font-size: 0.92rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+
+  .viaje__rail-punto:hover { color: var(--ink-soft); }
+
+  .viaje__rail-punto.is-active {
+    color: var(--ink);
+  }
+
+  .viaje__rail-punto.is-active .viaje__rail-marca {
+    border-color: var(--accent);
+    background: var(--accent);
+    transform: scale(1.3);
+    box-shadow: 0 0 12px rgb(88 227 154 / 45%);
+  }
+
+  .viaje__rail-punto.is-active .viaje__rail-indice { opacity: 1; }
 }
 
-.berimbau__lugar-marco {
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  z-index: 2;
+/* --------------------------------------------------------------- tramos */
+
+.viaje__copia { position: relative; z-index: 2; }
+
+.tramo {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.55rem;
-  height: 48svh;
-  padding: 2.9rem 0.7rem 0.7rem;
-  pointer-events: none;
+  align-items: flex-start;
+  min-height: 165svh;
+  padding: 30svh var(--sp-2) var(--sp-5);
 }
 
-/* Las dos piezas comparten proporcion (9/16), asi que entran enteras: la de
-   bananeira no admite recorte lateral — el valle va a la izquierda y el cuerpo
-   al centro. */
-.berimbau__destacado {
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: 21rem;
-  height: auto;
-  max-height: 100%;
-  aspect-ratio: 9 / 16;
-  border: 1px solid var(--rule);
-  border-radius: var(--radio);
-  background: #04120a;
-  object-fit: cover;
-  box-shadow: 0 24px 60px rgb(2 6 4 / 65%);
+/* El último no necesita cola: ahí termina el documento. */
+.tramo[data-tramo='reserva'] { min-height: auto; padding-bottom: calc(var(--sp-5) + 2rem); }
+.tramo[data-tramo='lugar'] { min-height: 150svh; }
+
+.tramo__columna {
+  width: 100%;
+  max-width: 34rem;
 }
 
-/* ------------------------------------------------------------------ panel */
-
-.berimbau__panel {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  z-index: 3;
-  max-height: 52svh;
-  padding: var(--sp-2) var(--sp-2) calc(var(--sp-2) + 0.4rem);
-  overflow-y: auto;
-  border-top: 1px solid var(--rule);
-  background: linear-gradient(180deg, rgb(7 16 11 / 82%), var(--bg) 22%);
-  backdrop-filter: blur(10px);
-  overscroll-behavior: contain;
-}
-
-.berimbau[data-parada='reserva'] .berimbau__panel { max-height: 74svh; }
-
-/* Rótulo de la parada: dice lo que la parada es. Donde no hay uno honesto, no
-   se pinta nada — antes había una etiqueta fija de adorno. */
-.berimbau__parada-rotulo {
+.tramo__rotulo {
   color: var(--accent);
-  font-size: 0.72rem;
+  font-size: var(--t-micro);
   font-weight: 800;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   text-wrap: balance;
 }
 
-.berimbau__titulo {
-  margin-top: 0.3rem;
-  color: var(--ink);
-  font-size: clamp(2rem, 8vw, 2.9rem);
-  font-weight: 800;
-}
-
-.berimbau__entradilla {
-  margin-top: 0.6rem;
-  max-width: 46ch;
-  color: var(--ink);
-  font-size: 0.98rem;
-}
-
-.berimbau__texto {
+.tramo__titulo {
   margin-top: 0.5rem;
-  max-width: 46ch;
-  color: var(--ink-soft);
-  font-size: 0.92rem;
-}
-
-
-.berimbau__rotulo {
-  margin-top: var(--sp-2);
-  color: var(--ink-quiet);
-  font-size: 0.7rem;
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: var(--t-display);
   font-weight: 800;
-  letter-spacing: 0.18em;
+  line-height: 0.94;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
+  text-wrap: balance;
 }
 
-.berimbau__cupos {
+.tramo__entradilla {
+  margin-top: 1rem;
+  max-width: 34ch;
+  color: var(--ink);
+  font-size: var(--t-lede);
+  line-height: 1.45;
+}
+
+.viaje__texto {
+  margin-top: 1rem;
+  max-width: 42ch;
+  color: var(--ink-soft);
+  font-size: var(--t-body);
+}
+
+.viaje__pie {
+  margin-top: 0.9rem;
+  max-width: 44ch;
+  color: var(--ink-quiet);
+  font-size: var(--t-micro);
+  letter-spacing: 0.02em;
+}
+
+.viaje__cupos {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.7rem;
-  padding: 0.3rem 0.85rem;
-  border: 1px solid rgb(88 227 154 / 40%);
+  margin-top: 1.1rem;
+  padding: 0.32rem 0.9rem;
+  border: 1px solid rgb(88 227 154 / 35%);
   border-radius: 999px;
-  background: rgb(88 227 154 / 9%);
   color: var(--accent);
-  font-size: 0.82rem;
+  font-size: var(--t-micro);
   font-weight: 700;
+  letter-spacing: 0.04em;
 }
 
-.berimbau__precio {
-  margin-top: 0.5rem;
+.viaje__precio {
+  margin-top: 0.6rem;
   color: var(--warm);
   font-family: var(--display);
-  font-size: clamp(2.8rem, 12vw, 4rem);
+  font-size: clamp(3rem, 9vw, 4.6rem);
   font-weight: 800;
-  line-height: 0.95;
+  line-height: 0.92;
 }
 
-.berimbau__nota {
-  margin-top: 0.55rem;
-  max-width: 48ch;
-  color: var(--ink-quiet);
-  font-size: 0.82rem;
-}
+.viaje .btn--primario { background: var(--accent); color: #04120a; box-shadow: none; }
+.viaje .btn--primario:hover { background: #6cf0ab; }
+.viaje .btn--fantasma { border-color: var(--rule); background: rgb(240 246 241 / 4%); color: var(--ink); }
 
-.berimbau__pendiente { color: var(--accent); font-weight: 700; }
-.berimbau__numero { color: var(--accent); font-size: 0.85em; }
-.berimbau__cta { margin-top: var(--sp-2); }
+/* listas de tramo */
 
-.berimbau .btn--primario {
-  background: var(--accent);
-  color: #04120a;
-  box-shadow: 0 6px 22px rgb(88 227 154 / 22%);
-}
-
-.berimbau .btn--primario:hover { background: #6cf0ab; box-shadow: 0 8px 26px rgb(88 227 154 / 32%); }
-.berimbau .btn--fantasma { border-color: var(--rule); background: rgb(240 246 241 / 4%); color: var(--ink); }
-
-.berimbau__lista {
+.viaje__lista {
   display: grid;
-  gap: 0.65rem;
-  margin-top: 0.8rem;
+  gap: 1.4rem;
+  margin-top: 2rem;
   padding: 0;
   list-style: none;
+  counter-reset: none;
 }
 
-.berimbau__lista li {
+.viaje__lista li {
   display: grid;
-  gap: 0.15rem;
-  padding-left: 0.85rem;
-  border-left: 2px solid var(--rule-soft);
+  gap: 0.2rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule-soft);
 }
 
-.berimbau__lista li:first-child { border-left-color: var(--accent); }
+.viaje__indice {
+  color: var(--accent);
+  font-family: var(--display);
+  font-size: var(--t-micro);
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  font-variant-numeric: tabular-nums;
+}
 
-.berimbau__lista-titulo {
+.viaje__lista-titulo {
   color: var(--ink);
   font-family: var(--display);
-  font-size: 1.25rem;
+  font-size: var(--t-titulo);
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.berimbau__lista-detalle { color: var(--ink-soft); font-size: 0.82rem; }
-.berimbau__lista-texto { max-width: 48ch; color: var(--ink-quiet); font-size: 0.85rem; }
-.berimbau__lista .badge { justify-self: start; margin-top: 0.2rem; }
+.viaje__lista-detalle { color: var(--ink-soft); font-size: var(--t-micro); letter-spacing: 0.04em; }
+.viaje__lista-texto { max-width: 42ch; margin-top: 0.35rem; color: var(--ink-quiet); font-size: var(--t-body); }
+.viaje__lista .badge { justify-self: start; margin-top: 0.4rem; }
 
-.berimbau .badge--roda,
-.berimbau .badge--activa { background: var(--accent); color: #04120a; }
-.berimbau .badge--agotada { border: 1px solid var(--rule); background: transparent; color: var(--ink-quiet); }
+.viaje .badge--roda,
+.viaje .badge--activa { background: var(--accent); color: #04120a; }
+.viaje .badge--agotada { border: 1px solid var(--rule); background: transparent; color: var(--ink-quiet); }
 
-/* mestres: la foto recortada del instructor al lado de su ficha */
-.berimbau__mestres {
-  display: grid;
-  gap: var(--sp-2);
-  margin-top: 0.8rem;
-  padding: 0;
-  list-style: none;
-}
+/* mestres */
 
-/* Flex y no grid: si una foto no cargara, la ficha ocupa el ancho sola en vez
-   de dejar una columna vacia. */
-.berimbau__mestres li {
+.viaje__mestres { display: grid; gap: 1.6rem; margin-top: 2rem; padding: 0; list-style: none; }
+
+.viaje__mestres li {
   display: flex;
-  gap: 0.85rem;
+  gap: 1rem;
   align-items: flex-start;
+  padding-top: 1.1rem;
+  border-top: 1px solid var(--rule-soft);
 }
 
-.berimbau__mestres li > div { display: grid; gap: 0.15rem; }
-.berimbau__mestre-foto { flex: none; margin: 0; }
+.viaje__mestres li > div { display: grid; gap: 0.2rem; }
+.viaje__mestre-foto { flex: none; margin: 0; }
 
-.berimbau__mestre-foto img {
-  width: 4.6rem;
-  height: 5.4rem;
+.viaje__mestre-foto img {
+  width: 5.2rem;
+  height: 6.2rem;
   border: 1px solid var(--rule);
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgb(88 227 154 / 10%), rgb(7 16 11 / 60%));
+  border-radius: 2px;
+  background: rgb(88 227 154 / 6%);
   object-fit: cover;
   object-position: top center;
 }
 
+/* la ventana del lugar */
 
-/* fotos del lugar */
-/* auto-fit: la fila se acomoda a las fotos que existan, sean una, dos o tres. */
-.berimbau__fotos {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+.viaje__ventana {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 2rem;
 }
 
-.berimbau__foto {
-  display: grid;
-  gap: 0.3rem;
-  margin: 0;
-}
-
-.berimbau__foto img {
+.viaje__pieza {
+  flex: 1 1 0;
+  min-width: 0;
   width: 100%;
-  /* `height: auto` NO sobra: sin el, el atributo height del <img> gana sobre
-     aspect-ratio y la miniatura sale estirada. Formato vertical, que es el de
-     las fotos del domo: recortarlas a apaisado les come la estructura. */
   height: auto;
-  aspect-ratio: 4 / 5;
+  aspect-ratio: 9 / 16;
   border: 1px solid var(--rule);
-  border-radius: 8px;
+  border-radius: 2px;
+  background: #04120a;
   object-fit: cover;
 }
 
-.berimbau__foto figcaption { color: var(--ink-quiet); font-size: 0.68rem; line-height: 1.25; }
-
-
-/* cohortes */
-.berimbau__cohortes {
+.viaje__apoyo {
   display: grid;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-  padding: 0;
-  list-style: none;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.6rem;
 }
 
-.berimbau__cohortes li {
+.viaje__apoyo-foto { display: grid; gap: 0.35rem; margin: 0; }
+
+.viaje__apoyo-foto img {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--rule);
+  border-radius: 2px;
+  object-fit: cover;
+}
+
+.viaje__apoyo-foto figcaption { color: var(--ink-quiet); font-size: 0.66rem; line-height: 1.25; }
+
+/* cohortes y formulario */
+
+.viaje__cohortes { display: grid; gap: 0.4rem; margin-top: 1.6rem; padding: 0; list-style: none; }
+
+.viaje__cohortes li {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.45rem 0.7rem;
+  padding: 0.5rem 0.75rem;
   border: 1px solid var(--rule-soft);
-  border-radius: 10px;
-  opacity: 0.6;
+  border-radius: 2px;
+  opacity: 0.55;
 }
 
-.berimbau__cohortes li[data-activa='true'] { border-color: var(--accent-dim); opacity: 1; }
-.berimbau__cohortes strong { margin-left: auto; color: var(--ink); font-family: var(--display); font-size: 1.15rem; }
+.viaje__cohortes li[data-activa='true'] { border-color: var(--accent-dim); opacity: 1; }
+.viaje__cohortes strong { margin-left: auto; color: var(--ink); font-family: var(--display); font-size: 1.1rem; }
 
-/* formulario dentro del recorrido */
-.berimbau .reserva-form {
+.viaje .reserva-form {
   max-width: none;
-  margin-top: var(--sp-2);
+  margin-top: 1.6rem;
   padding: var(--sp-2);
   border-color: var(--rule);
+  border-radius: 2px;
   background: rgb(240 246 241 / 3%);
   box-shadow: none;
 }
 
-.berimbau .reserva-form__titulo { color: var(--ink); }
-.berimbau .campo label { color: var(--ink-quiet); }
-.berimbau .campo label > span { color: var(--accent); }
-.berimbau .campo input { border-color: var(--rule); background: rgb(4 10 7 / 70%); color: var(--ink); }
-.berimbau .campo input:focus { border-color: var(--accent); }
-.berimbau .reserva-form__estado { color: var(--accent); }
+.viaje .reserva-form__titulo { color: var(--ink); }
+.viaje .campo label { color: var(--ink-quiet); }
+.viaje .campo label > span { color: var(--accent); }
+.viaje .campo input { border-color: var(--rule); border-radius: 2px; background: rgb(4 10 7 / 70%); color: var(--ink); }
+.viaje .campo input:focus { border-color: var(--accent); }
+.viaje .reserva-form__estado { color: var(--accent); }
 
-.berimbau__pasos { display: flex; gap: 0.6rem; margin-top: var(--sp-2); }
+/* --------------------------------------------------------------- revelado */
+/* Solo se arma si el script vivió y el movimiento es bienvenido. Sin la clase
+   `js` todo queda visible y quieto, que es el estado por defecto. */
 
-.berimbau__paso {
-  padding: 0.45rem 0.9rem;
-  border: 1px solid var(--rule);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
+.js .reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  transition-delay: var(--retardo, 0ms);
 }
 
-.berimbau__paso:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
-.berimbau__paso:disabled { opacity: 0.35; cursor: default; }
-
-/* ------------------------------------------------------------------- rail */
-
-.berimbau__rail {
-  position: absolute;
-  top: 4.7rem;
-  right: 0.55rem;
-  z-index: 4;
-  padding: 0.5rem 0.6rem;
-  border: 1px solid var(--rule);
-  border-radius: var(--radio);
-  background: var(--glass);
-  backdrop-filter: blur(8px);
-}
-
-.berimbau__rail ol { display: grid; gap: 0.15rem; padding: 0; margin: 0; list-style: none; }
-
-.berimbau__rail-boton {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  width: 100%;
-  padding: 0.4rem 0.35rem;
-  border: 0;
-  background: transparent;
-  color: var(--ink-quiet);
-  text-align: left;
-  cursor: pointer;
-}
-
-.berimbau__rail-marca {
-  flex: none;
-  width: 11px;
-  height: 11px;
-  border: 1px solid var(--ink-quiet);
-  border-radius: 50%;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.berimbau__rail-boton:hover .berimbau__rail-marca { border-color: var(--accent); }
-
-.berimbau__rail-boton[aria-current='step'] .berimbau__rail-marca {
-  border-color: var(--accent);
-  background: var(--accent);
-  transform: scale(1.25);
-  box-shadow: 0 0 12px rgb(88 227 154 / 50%);
-}
-
-.berimbau__rail-texto { display: none; flex-direction: column; line-height: 1.15; }
-
-.berimbau__rail-indice {
-  color: var(--accent);
-  font-family: var(--display);
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  font-variant-numeric: tabular-nums;
-}
-
-.berimbau__rail-titulo {
-  color: var(--ink-soft);
-  font-family: var(--display);
-  font-size: 1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.berimbau__rail-boton[aria-current='step'] .berimbau__rail-titulo { color: var(--ink); }
-.berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: flex; }
-.berimbau__pista { display: none; }
+.js .reveal.is-in { opacity: 1; transform: none; }
 
 /* ------------------------------------------------------- barra de cambio 2D */
 
@@ -488,101 +436,44 @@
 .cambio-modo p { flex: 1 1 18rem; color: var(--c-muted); font-size: 0.86rem; }
 .cambio-modo .btn { padding: 0.45rem 1rem; font-size: 0.9rem; }
 
-/* ------------------------------------------------------------ pantallas anchas */
+/* --------------------------------------------------------- pantallas anchas */
 
 @media (min-width: 800px) {
-  .berimbau__panel {
-    top: 50%;
-    right: auto;
-    bottom: auto;
-    width: min(31rem, 42vw);
-    max-height: 80svh;
-    padding: var(--sp-3);
-    border: 1px solid var(--rule);
-    border-radius: var(--radio);
-    background: var(--glass);
-    transform: translateY(-50%);
-    margin-left: var(--sp-3);
-  }
-
-  .berimbau[data-parada='reserva'] .berimbau__panel { max-height: 86svh; }
-
-  /* Todo el material está filmado y tomado en vertical: en ancho va como pareja
-     de ventanas, no como franja estirada. Queda entre el panel y el rail. */
-  .berimbau__lugar-marco {
-    top: 50%;
-    right: calc(var(--sp-3) + 15.5rem);
-    left: calc(var(--sp-3) + 32.5rem);
-    height: min(66svh, 32rem);
-    padding: 0;
-    gap: 0.75rem;
-    transform: translateY(-50%);
-  }
-
-  .berimbau__rail { top: 50%; right: var(--sp-3); transform: translateY(-50%); }
-  .berimbau__rail-boton { padding: 0.45rem 0.5rem; }
-  .berimbau__rail-texto { display: flex; }
-  .berimbau__rail-titulo { font-size: 1.1rem; }
-
-  .berimbau__pista {
-    display: block;
-    max-width: 12rem;
-    margin-top: var(--sp-2);
-    padding-left: 0.35rem;
-    color: var(--ink-quiet);
-    font-size: 0.72rem;
-  }
-
-  .berimbau__marca { top: var(--sp-3); left: var(--sp-3); }
-  .berimbau__texto-boton { top: var(--sp-3); right: var(--sp-3); }
+  .tramo { padding: 30svh var(--sp-5) var(--sp-5); }
+  .viaje__marca { top: var(--sp-3); left: var(--sp-3); }
+  .viaje__texto-boton { top: var(--sp-3); right: var(--sp-3); }
   .cambio-modo { padding: 0.7rem var(--sp-3); }
-  .berimbau__mestres li { grid-template-columns: 5.4rem 1fr; }
-  .berimbau__mestre-foto img,
-  .berimbau__mestre-foto--vacia { width: 5.4rem; height: 6.4rem; }
+  .viaje__mestre-foto img { width: 6rem; height: 7.2rem; }
 }
 
-/* Celular angosto: la marca y el botón de texto se pisaban en 390 px. */
-/* En celular el rail pasa a ser una fila de puntos justo encima del panel: como
-   columna a la derecha se montaba sobre el material del lugar. */
-@media (max-width: 799px) {
-  .berimbau__rail {
-    top: auto;
-    right: 0;
-    bottom: calc(52svh + 0.45rem);
-    left: 0;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    border: 0;
-    background: transparent;
-    backdrop-filter: none;
-  }
-
-  .berimbau__rail ol {
-    grid-auto-flow: column;
-    gap: 0.3rem;
-    padding: 0.35rem 0.7rem;
-    border: 1px solid var(--rule);
-    border-radius: 999px;
-    background: var(--glass);
-    backdrop-filter: blur(8px);
-  }
-
-  .berimbau[data-parada='reserva'] .berimbau__rail { bottom: calc(74svh + 0.45rem); }
-
-  .berimbau__lugar-marco { padding: 3.2rem 0.7rem 2.4rem; }
+@media (min-width: 1200px) {
+  .tramo { padding-left: clamp(var(--sp-5), 8vw, 9rem); }
 }
 
+/* En pantallas angostas no hay columna segura: el instrumento y la copia
+   comparten todo el ancho, así que la copia toma el mismo vidrio tintado que
+   usan los paneles. En escritorio no lleva ningún fondo. */
 @media (max-width: 560px) {
-  .berimbau__marca-nombre { font-size: 1rem; letter-spacing: 0.06em; }
-  .berimbau__marca-lema { font-size: 0.62rem; letter-spacing: 0.1em; }
-  .berimbau__texto-boton { padding: 0.4rem 0.7rem; font-size: 0.72rem; }
-  .berimbau__rail-boton { padding: 0.3rem 0.25rem; }
-  /* Solo los puntos: la etiqueta abierta se montaba sobre la escena y el
-     título de la parada ya está grande en el panel. */
-  .berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: none; }
+  /* La marca y el botón se pisaban en 390 px. */
+  .viaje__marca-nombre { font-size: 0.92rem; letter-spacing: 0.05em; }
+  .viaje__marca-lema { font-size: 0.6rem; letter-spacing: 0.12em; }
+  .viaje__texto-boton { padding: 0.38rem 0.65rem; font-size: 0.66rem; }
+}
+
+@media (max-width: 799px) {
+  .tramo__columna {
+    padding: var(--sp-3) var(--sp-2);
+    border: 1px solid var(--rule-soft);
+    border-radius: 3px;
+    background: var(--glass);
+    backdrop-filter: blur(10px);
+  }
+
+  .viaje__mestres li { gap: 0.75rem; }
+  .viaje__mestre-foto img { width: 4.4rem; height: 5.2rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .berimbau__rail-marca { transition: none; }
+  .viaje__rail-marca { transition: none; }
+  .js .reveal { opacity: 1; transform: none; transition: none; }
 }
