@@ -1,0 +1,11 @@
+{
+  "name": "tattoo-guatoc-backend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "commonjs",
+  "description": "Backend minimo (Node stdlib) para el formulario de reservas de tattoo.guatoc.co",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

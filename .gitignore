@@ -1,0 +1,6 @@
+node_modules/
+dist/
+backend/reservas.jsonl
+# fotos de personas: fuera del repo hasta OK explicito del operador (repo PUBLICO)
+public/instructores/*.jpg
+public/instructores/*.png

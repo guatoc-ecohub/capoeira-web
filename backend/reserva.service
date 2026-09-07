@@ -1,0 +1,26 @@
+
+# Unit systemd --user de EJEMPLO para el backend de reservas de tattoo.guatoc.co
+#
+# Instalar (como el usuario que corre el server, ej. kortux en alpha):
+#   mkdir -p ~/.config/systemd/user
+#   cp reserva.service ~/.config/systemd/user/tattoo-reserva.service
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now tattoo-reserva.service
+#   systemctl --user status tattoo-reserva.service
+#
+# Ajustar ExecStart/WorkingDirectory si el checkout vive en otra ruta.
+
+[Unit]
+Description=tattoo.guatoc.co - backend de reservas (POST /api/reserva)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kortux/Workspace/tattoo-guatoc/backend
+ExecStart=/usr/bin/env node /home/kortux/Workspace/tattoo-guatoc/backend/server.js
+Environment=PORT=8793
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=default.target

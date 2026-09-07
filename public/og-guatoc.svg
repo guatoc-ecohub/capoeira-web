@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#f4eee5"/>
+  <path d="M0 540c180-70 292-45 427-5 159 48 294 57 446 9 120-38 220-44 327-5v91H0Z" fill="#d9e1cf"/>
+  <g fill="none" stroke="#171512" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M85 520c58-157 74-289 45-397" stroke-width="3"/>
+    <path d="M117 378c-36-31-68-46-97-45 26 34 58 52 100 59M129 323c-28-39-54-64-82-76 15 43 41 73 88 91M137 269c-17-39-33-66-53-83 4 42 21 76 57 103" stroke-width="2.5"/>
+    <path d="M133 381c43-24 81-33 115-25-27 30-67 43-119 38M144 329c42-32 78-48 109-46-22 36-59 57-111 59M152 274c32-37 61-58 91-62-13 37-42 63-87 76" stroke-width="2.5"/>
+    <path d="M1050 590c-9-143 10-253 58-332" stroke-width="3"/>
+    <path d="M1080 416c-44-22-78-25-105-12 29 25 63 34 108 28M1091 363c-34-32-63-48-92-48 20 34 51 56 95 66M1103 308c-19-34-34-57-54-69 3 35 18 64 54 88" stroke-width="2.5"/>
+    <path d="M1097 417c40-31 76-44 108-39-24 35-60 52-108 50M1105 363c39-38 71-57 102-57-17 38-51 65-99 76M1120 307c27-41 52-64 81-72-9 38-36 67-80 86" stroke-width="2.5"/>
+    <path d="M928 127c-20 61-20 111 0 154" stroke-width="2.5"/>
+    <path d="M924 150c-34-48-74-70-120-66 9 45 39 79 90 101M932 150c34-48 74-70 120-66-9 45-39 79-90 101M920 190c-41-10-73-2-97 22 34 30 68 34 101 19M936 190c41-10 73-2 97 22-34 30-68 34-101 19" stroke-width="2.5"/>
+    <path d="M954 203c41-2 70 11 90 40-37 8-67-4-90-32" stroke-width="2.5"/>
+    <path d="M252 124c31-20 63-18 91 1 20 13 40 14 61 3-17-5-29-14-40-27 20 5 36 16 46 32-10 20-31 30-55 28-30-2-46-19-68-32-13-8-23-9-35-5Z" stroke-width="2.5"/>
+    <path d="M366 107c-5-24 2-45 21-63 3 24 1 44-8 62M387 44c13 12 25 16 41 16-14 8-28 6-41 0M397 105c18-6 33-4 48 5-17 4-31 4-45-1" stroke-width="2.5"/>
+  </g>
+  <g fill="#171512">
+    <text x="600" y="238" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="28" letter-spacing="6">GUATOC</text>
+    <text x="600" y="326" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="62" letter-spacing="1">Fin de semana</text>
+    <text x="600" y="396" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="62" letter-spacing="1">de tatuaje</text>
+    <text x="600" y="460" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" letter-spacing="3">25-27 sep 2026</text>
+  </g>
+  <path d="M490 494h220" stroke="#171512" stroke-width="2"/>
+  <circle cx="600" cy="494" r="4" fill="#171512"/>
+</svg>
