@@ -1,0 +1,468 @@
+/* Recorrido 3D del berimbau. Vive aparte de index.css porque es una
+   experiencia completa y no una seccion mas de la pagina. Usa las mismas
+   variables de color del sitio: no se define ningun color suelto. */
+
+.berimbau {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-text);
+}
+
+.berimbau__escena {
+  position: absolute;
+  inset: 0;
+  touch-action: none;
+}
+
+.berimbau__lienzo {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Adentro de la cabaca el fondo es claro: sin sombra propia, la marca y el rail
+   se pierden contra la pared. */
+.berimbau__marca {
+  position: absolute;
+  top: var(--sp-2);
+  left: var(--sp-2);
+  z-index: 3;
+  text-shadow: 0 1px 10px #16100a, 0 0 3px #16100a;
+  pointer-events: none;
+}
+
+.berimbau__marca-nombre {
+  color: var(--c-text);
+  font-family: var(--display);
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.berimbau__marca-lema {
+  color: var(--c-accent);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.berimbau__texto-boton {
+  position: absolute;
+  top: var(--sp-2);
+  right: var(--sp-2);
+  z-index: 4;
+  padding: 0.5rem 0.95rem;
+  font-size: 0.85rem;
+  background: #16100acc;
+  backdrop-filter: blur(8px);
+}
+
+.berimbau__cargando,
+.berimbau__aviso {
+  position: absolute;
+  left: 50%;
+  z-index: 4;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: #16100ae6;
+  color: var(--c-muted);
+  font-size: 0.85rem;
+  transform: translateX(-50%);
+}
+
+.berimbau__cargando { top: 50%; }
+.berimbau__aviso { bottom: calc(var(--sp-2) + 0.4rem); }
+
+/* ------------------------------------------------------------------ panel */
+
+.berimbau__panel {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 3;
+  max-height: 52svh;
+  padding: var(--sp-2) var(--sp-2) calc(var(--sp-2) + 0.4rem);
+  overflow-y: auto;
+  border-top: 1px solid var(--c-line);
+  background: linear-gradient(180deg, #16100acc, #16100af7 22%);
+  backdrop-filter: blur(10px);
+  overscroll-behavior: contain;
+}
+
+.berimbau__toque {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--c-accent);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.berimbau__toque span {
+  padding: 0.1rem 0.45rem;
+  border: 1px solid var(--c-line);
+  border-radius: 4px;
+  color: var(--c-muted);
+  font-size: 0.64rem;
+}
+
+.berimbau__titulo {
+  margin-top: 0.35rem;
+  font-size: clamp(2rem, 8vw, 2.9rem);
+  font-weight: 800;
+}
+
+.berimbau__toque-nota {
+  margin-top: 0.2rem;
+  color: var(--c-gold);
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.berimbau__entradilla {
+  margin-top: 0.6rem;
+  max-width: 46ch;
+  color: var(--c-text);
+  font-size: 0.98rem;
+}
+
+.berimbau__texto {
+  margin-top: 0.5rem;
+  max-width: 46ch;
+  color: var(--c-muted);
+  font-size: 0.92rem;
+}
+
+.berimbau__kicker {
+  margin-top: 0.5rem;
+  color: var(--c-gold);
+  font-family: var(--display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.berimbau__cupos {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid rgb(163 188 90 / 45%);
+  border-radius: 999px;
+  background: rgb(163 188 90 / 10%);
+  color: var(--c-verde);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.berimbau__precio {
+  margin-top: 0.5rem;
+  color: var(--c-accent);
+  font-family: var(--display);
+  font-size: clamp(2.8rem, 12vw, 4rem);
+  font-weight: 800;
+  line-height: 0.95;
+}
+
+.berimbau__nota {
+  margin-top: 0.55rem;
+  max-width: 48ch;
+  color: var(--c-muted);
+  font-size: 0.82rem;
+}
+
+.berimbau__pendiente {
+  color: var(--c-accent);
+  font-weight: 700;
+}
+
+.berimbau__cta { margin-top: var(--sp-2); }
+
+.berimbau__lista {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.8rem;
+  padding: 0;
+  list-style: none;
+}
+
+.berimbau__lista li {
+  display: grid;
+  gap: 0.15rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--c-line);
+}
+
+.berimbau__lista li:first-child { border-left-color: var(--c-accent); }
+
+.berimbau__lista-titulo {
+  color: var(--c-text);
+  font-family: var(--display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.berimbau__lista-detalle {
+  color: var(--c-gold);
+  font-size: 0.82rem;
+}
+
+.berimbau__lista-texto {
+  max-width: 48ch;
+  color: var(--c-muted);
+  font-size: 0.85rem;
+}
+
+.berimbau__lista .badge { justify-self: start; margin-top: 0.2rem; }
+
+.berimbau__pasos {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: var(--sp-2);
+}
+
+.berimbau__paso {
+  padding: 0.45rem 0.9rem;
+  border: 1px solid var(--c-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--c-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.berimbau__paso:hover:not(:disabled) { border-color: var(--c-accent); color: var(--c-text); }
+.berimbau__paso:disabled { opacity: 0.35; cursor: default; }
+
+/* ------------------------------------------------------------------- rail */
+
+/* En pantallas angostas el rail se cuelga debajo del encabezado: centrado a
+   media altura se montaba sobre el panel. */
+.berimbau__rail {
+  position: absolute;
+  top: 4.7rem;
+  right: 0.55rem;
+  z-index: 3;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--c-line);
+  border-radius: var(--radio);
+  background: #16100ae0;
+  backdrop-filter: blur(8px);
+}
+
+.berimbau__rail ol {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.berimbau__rail-boton {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  padding: 0.4rem 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--c-muted);
+  text-align: left;
+  cursor: pointer;
+}
+
+.berimbau__rail-marca {
+  position: relative;
+  flex: none;
+  width: 11px;
+  height: 11px;
+  border: 1px solid var(--c-muted);
+  border-radius: 50%;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.berimbau__rail-boton:hover .berimbau__rail-marca { border-color: var(--c-accent); }
+
+.berimbau__rail-boton[aria-current='step'] .berimbau__rail-marca {
+  border-color: var(--c-accent);
+  background: var(--c-accent);
+  transform: scale(1.25);
+  box-shadow: 0 0 12px #f28c1e99;
+}
+
+.berimbau__rail-texto {
+  display: none;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.berimbau__rail-toque {
+  color: var(--c-accent);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.berimbau__rail-titulo {
+  color: var(--c-muted);
+  font-family: var(--display);
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.berimbau__rail-boton[aria-current='step'] .berimbau__rail-titulo { color: var(--c-text); }
+.berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: flex; }
+
+.berimbau__pista { display: none; }
+
+/* ---------------------------------------------------- huecos de foto y video */
+
+.berimbau__medios {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.berimbau__video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8rem;
+  padding: 0.45rem;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: #16100ad9;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  will-change: transform;
+  pointer-events: auto;
+}
+
+.berimbau__video video {
+  display: block;
+  width: 100%;
+  border-radius: 6px;
+  background: #000;
+}
+
+.berimbau__video--vacio {
+  display: grid;
+  place-items: center;
+  gap: 0.15rem;
+  aspect-ratio: 16 / 10;
+  border-style: dashed;
+  border-color: var(--c-accent);
+  text-align: center;
+}
+
+.berimbau__video-marca { color: var(--c-accent); font-size: 1.35rem; line-height: 1; }
+
+.berimbau__video-titulo {
+  color: var(--c-text);
+  font-family: var(--display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.berimbau__video-pie {
+  color: var(--c-muted);
+  font-size: 0.66rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------- barra de cambio 2D */
+
+.cambio-modo {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  flex-wrap: wrap;
+  padding: 0.7rem var(--sp-2);
+  border-bottom: 1px solid var(--c-line);
+  background: var(--c-surface);
+}
+
+.cambio-modo p {
+  flex: 1 1 18rem;
+  color: var(--c-muted);
+  font-size: 0.86rem;
+}
+
+.cambio-modo .btn { padding: 0.45rem 1rem; font-size: 0.9rem; }
+
+/* ------------------------------------------------------------ pantallas anchas */
+
+@media (min-width: 800px) {
+  .berimbau__panel {
+    top: 50%;
+    right: auto;
+    bottom: auto;
+    width: min(31rem, 42vw);
+    max-height: 78svh;
+    padding: var(--sp-3);
+    border: 1px solid var(--c-line);
+    border-radius: var(--radio);
+    background: #16100af0;
+    transform: translateY(-50%);
+    margin-left: var(--sp-3);
+  }
+
+  .berimbau__rail {
+    top: 50%;
+    right: var(--sp-3);
+    transform: translateY(-50%);
+  }
+  .berimbau__rail-boton { padding: 0.45rem 0.5rem; }
+  .berimbau__rail-texto { display: flex; }
+  .berimbau__rail-titulo { font-size: 1.1rem; }
+
+  .berimbau__pista {
+    display: block;
+    max-width: 12rem;
+    margin-top: var(--sp-2);
+    padding-left: 0.35rem;
+    color: var(--c-muted);
+    font-size: 0.72rem;
+  }
+
+  .berimbau__marca { top: var(--sp-3); left: var(--sp-3); }
+  .berimbau__texto-boton { top: var(--sp-3); right: var(--sp-3); }
+  .berimbau__video { width: 9.5rem; }
+  .cambio-modo { padding: 0.7rem var(--sp-3); }
+}
+
+/* Celular angosto: la marca y el boton de texto se pisaban en 390 px. */
+@media (max-width: 560px) {
+  .berimbau__marca-nombre { font-size: 1rem; letter-spacing: 0.06em; }
+  .berimbau__marca-lema { font-size: 0.62rem; letter-spacing: 0.1em; }
+  .berimbau__texto-boton { padding: 0.4rem 0.7rem; font-size: 0.72rem; }
+  .berimbau__video { width: 6.5rem; }
+  /* Solo los puntos: la etiqueta abierta se montaba sobre la escena y el
+     titulo de la parada ya esta grande en el panel. */
+  .berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .berimbau__rail-marca,
+  .berimbau__video { transition: none; }
+}

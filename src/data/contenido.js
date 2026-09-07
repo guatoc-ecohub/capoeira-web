@@ -122,8 +122,104 @@ export const contenido = {
     detalle: '10 · 11 · 12 octubre de 2026 · Guatoc, Colombia',
     lema: 'Artes marciales aplicadas al jogo',
   },
+  // Recorrido 3D. El berimbau manda la roda: su toque decide qué juego se juega,
+  // así que el instrumento es el menú. El orden de `paradas` es el mismo de
+  // CAMARA en src/tresd/paradas.js — si cambia uno, cambian los dos.
+  berimbau: {
+    marca: 'Guatoc Capoeira',
+    titulo: 'El berimbau manda',
+    cargando: 'Templando el arame…',
+    pista: 'Use las flechas, la rueda o el rail para recorrer el instrumento.',
+    railAria: 'Paradas del recorrido por el berimbau',
+    paradaAria: 'Contenido de la parada',
+    anterior: 'Parada anterior',
+    siguiente: 'Parada siguiente',
+    verTexto: 'Ver todo en texto',
+    volver: 'Volver al berimbau',
+    avisoFallback: 'El recorrido en 3D no corrió en este equipo, así que acá está el mismo contenido en texto.',
+    avisoTexto: 'Está viendo el campamento en texto. El recorrido por el berimbau sigue disponible.',
+    avisoRendimiento: 'Bajamos la calidad para sostener el movimiento.',
+    toqueEtiqueta: 'Toque',
+    paradas: [
+      {
+        id: 'evento',
+        toque: 'Angola',
+        toqueNota: 'El toque más antiguo: jogo bajo, pausado, de mirada larga.',
+        titulo: 'El campamento',
+        entradilla: 'Tres días de entrenamiento en Guatoc, con cupos contados para que el trabajo sea cercano.',
+      },
+      {
+        id: 'dias',
+        toque: 'São Bento Grande',
+        toqueNota: 'El toque rápido: el jogo sube, se aprieta y pide respuesta.',
+        titulo: 'Tres días, dos rodas',
+        entradilla: 'Abre una roda, cierra otra, y en medio queda el día largo de entrenamiento.',
+      },
+      {
+        id: 'mestres',
+        toque: 'Iúna',
+        toqueNota: 'El toque de los graduados: en la roda solo entran los formados.',
+        titulo: 'Los mestres',
+        entradilla: 'Tres miradas distintas sobre el mismo jogo, cada una con su disciplina de combate.',
+      },
+      {
+        id: 'lugar',
+        toque: 'Cavalaria',
+        toqueNota: 'El toque que avisa quién viene llegando al terreiro.',
+        titulo: 'El lugar',
+        entradilla: 'Guatoc para entrenar, el coliseo de la vereda El Curí para cerrar.',
+        sedes: [
+          { nombre: 'Guatoc', detalle: 'Donde se entrena y se arma la roda de bienvenida. Sábado y domingo.' },
+          { nombre: 'Coliseo de la vereda El Curí', detalle: 'La roda de despedida, el lunes a las 4:00 PM.' },
+        ],
+      },
+      {
+        id: 'reserva',
+        toque: 'Santa Maria',
+        toqueNota: 'El toque del dobrão en el piso de la roda: juega quien lo levanta.',
+        titulo: 'Reservar el cupo',
+        entradilla: 'La reserva asegura el cupo y desbloquea el contenido del campamento.',
+      },
+    ],
+  },
+  // Huecos reservados para el material de Guatoc que todavía no existe.
+  // Para enchufarlo: ponga la ruta en `src` (las fotos entran como láminas dentro
+  // de la cabaça; los videos, como capa HTML encima del canvas).
+  medios: {
+    titulo: 'Guatoc en imágenes',
+    nota: 'Las fotos y los videos del lugar se enchufan en src/data/contenido.js → medios.',
+    pendienteFoto: 'Foto pendiente',
+    pendienteVideo: 'Video pendiente',
+    fotos: [
+      { id: 'cancha', src: null, titulo: 'La cancha', alt: 'La cancha de Guatoc donde se arma la roda' },
+      { id: 'casa', src: null, titulo: 'La casa', alt: 'La casa de Guatoc y sus corredores' },
+      { id: 'monte', src: null, titulo: 'El monte', alt: 'El monte alrededor de Guatoc' },
+      { id: 'coliseo', src: null, titulo: 'El coliseo', alt: 'Coliseo de la vereda El Curí' },
+      { id: 'mesa', src: null, titulo: 'La mesa', alt: 'La mesa larga del campamento' },
+    ],
+    videos: [
+      { id: 'roda', src: null, poster: null, titulo: 'La roda', pie: 'Cómo suena y se mueve una roda en Guatoc' },
+      { id: 'camino', src: null, poster: null, titulo: 'El camino', pie: 'Cómo se llega hasta Guatoc' },
+    ],
+    // Grabado del fondo de la cabaça (se pinta como textura, no lleva texto vivo).
+    placa: { valor: '$100.000', pie: 'Reserva' },
+    // Enganche de audio: sin sonido por ahora, el navegador bloquea el autoplay.
+    // Ponga la ruta del toque y conecte reproducirToque() en Berimbau3D.jsx.
+    audio: {
+      nota: 'Sin audio por ahora. Cada parada ya sabe cuál toque le corresponde.',
+      toques: [
+        { id: 'angola', src: null },
+        { id: 'sao-bento-grande', src: null },
+        { id: 'iuna', src: null },
+        { id: 'cavalaria', src: null },
+        { id: 'santa-maria', src: null },
+      ],
+    },
+  },
 }
 
 export const agenda = contenido.agenda.dias
 export const instructores = contenido.instructores.fichas
 export const tecnica = contenido.tecnica.bloques
+export const paradasBerimbau = contenido.berimbau.paradas
+export const medios = contenido.medios
