@@ -118,6 +118,52 @@ bien.
   sin revelados y sin motas animadas.
 - **Todo el contenido como HTML de verdad**, ahora en el flujo del documento.
 
+## Los dos portales, una sola paleta
+
+El 2D pasó a la familia verde de Guatoc. Se cambiaron los **valores** de los doce
+tokens de `:root`, no las reglas, así que los nombres siguen sirviendo en los cien
+sitios donde ya se usaban.
+
+- Mapeo directo: `--c-bg` → `#07100b`, `--c-text` → `#f0f6f1`, `--c-muted` →
+  `#c3d5c8`, `--c-accent` → `#58e39a`, `--c-gold` → `#e6b450`.
+- Los escalones de superficie y borde (`--c-bg-alt`, `--c-surface`,
+  `--c-surface-2`, `--c-line`, `--c-ink`) se derivaron **conservando los mismos
+  saltos de luminancia** que tenían en marrón, medidos uno por uno, para que la
+  jerarquía de profundidad no se perdiera. `--c-line` quedó en `#29332d`, que es
+  casi exactamente el borde que el 3D pinta con su `--rule` sobre el fondo: los
+  dos portales dibujan la misma línea.
+- `--c-danger` se quedó cálido a propósito: un error tiene que verse como error.
+
+**Contraste medido, par por par.** Ninguno bajó de AA y varios mejoraron: texto
+sobre fondo 16,5 → 17,6; secundario sobre fondo 8,8 → 12,6; secundario sobre
+superficie 7,9 → 11,5; acento sobre fondo 7,7 → 11,8. El texto largo del 2D quedó
+mejor servido que antes.
+
+**Los translúcidos se derivan de un solo lugar.** Antes cada transparencia era un
+hex con alfa o un `rgb()` con el naranja escrito adentro. Ahora hay tripletas
+(`--c-accent-rgb`, `--c-gold-rgb`, `--c-verde-rgb`, `--c-text-rgb`, `--c-bg-rgb`) y
+todo se arma con `rgb(var(--…) / X%)`. El degradado del botón sale del acento por
+`color-mix`, con el acento plano declarado antes como respaldo: si el navegador no
+entiende `color-mix` queda un botón verde liso, no un botón sin fondo.
+
+**Dos cosas que la unificación destapó y hubo que resolver:**
+
+1. El **precio** compartía el verde del sistema con la disponibilidad, y dentro de
+   la tarjeta de precios las dos señales se anulaban. Pasó a `--c-gold`, que además
+   es el dorado que el precio ya tenía en el recorrido 3D.
+2. `--c-verde` y `--c-accent` quedaron en el mismo valor: en un sitio verde, la
+   señal de «disponible» ES el color del sistema. El chip de cupos se distingue por
+   su tratamiento (píldora con borde, tinte y punto), no por el tono. Se ve, pero no
+   resalta como resaltaba el olivo sobre marrón; si el operador lo quiere más
+   fuerte, apuntar `--c-verde` a `--c-gold` es una línea.
+
+**El barrido, que es donde estaba el riesgo.** Un `grep` de `#f28c1e` no habría
+bastado: además de los cinco hex del botón había **diez literales en forma `rgb()`**
+—el acento, el dorado y el verde escritos como tripletas decimales— que ningún grep
+de hexadecimal encuentra. Es el patrón de los controles ciegos por identificador.
+Quedaron cero supervivientes de toda la familia marrón en `src/` y en `index.html`,
+incluido el `theme-color` de la barra del navegador.
+
 ## Rendimiento
 
 - ~2.800 triángulos, una docena de llamadas de dibujo, 2 luces de escena más la de
@@ -134,7 +180,8 @@ bien.
    no de código.
 3. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador; en
    el cuerpo no se nombra la cascada.
-4. Unificar la paleta de la página 2D (sigue en la familia brasa de `index.css`).
+4. Los assets sociales (`public/og-guatoc.svg` y `.png`, `favicon.svg`) siguen en
+   los colores viejos: son imágenes, no CSS, y hay que regenerarlas.
 5. `package-lock.json` sigue sin `three`: `npm install` acá escribiría en el
    `node_modules` compartido con el otro carril. Toca `npm install --package-lock-only`
    al juntar.
