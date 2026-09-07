@@ -61,27 +61,50 @@ jogo por la moneda en el piso de la roda, Benguela el toque lento del jogo de de
 
 ## El material de Guatoc
 
-- `public/guatoc/chorrera-loop.mp4` (720x1280, 2,8 s, sin pista de audio) es el
-  material principal de la parada del lugar. Va como **capa HTML encima del canvas**,
-  nunca como textura WebGL: `muted loop playsinline preload="none"`, y se arranca a
-  mano al llegar a la parada, así que **no se baja un byte hasta que el visitante
-  llega ahí**.
-- **Fallback del clip**: `chorrera-poster.jpg`, que es el mismo encuadre, así que el
-  cambio no mueve la composición. Se usa con `prefers-reduced-motion` (queda la foto
-  quieta, nunca el video) y si la reproducción falla.
-- **Encuadre**: en celular llena la franja de canvas que deja el panel, casi a su
-  proporción nativa. En pantalla ancha **no se estiró ni se recortó a franja
-  horizontal**: la caída del agua es el sujeto y recortarla a lo ancho la destruye,
-  así que va como ventana vertical enmarcada. Decisión mía, distinta de la sugerencia
-  de la franja; si prefieren la franja, es un bloque de CSS.
-- **Velo sobre la escena** mientras se muestra el lugar: sin él la ventana se leía
-  como calcomanía pegada sobre la calabaza, que es justo lo rechazado.
-- `public/guatoc/chorrera.jpg` (1280x964, la niebla) va en el panel, a tamaño nativo,
-  como la primera de las tres fotos del lugar. Las otras dos quedan como huecos
-  punteados y nombrados (`El terreiro`, `La casa`), igual que el segundo video.
-- **Las fotos de los instructores** (`public/instructores/*.png`) entran en la parada
-  de los mestres. Siguen fuera del repo por `.gitignore` (fotos de personas): están
-  en el deploy y en el worktree, no en el commit.
+Todo vive en la parada del LUGAR, repartido por lo que cada pieza cuenta. **No hay
+un solo hueco de «Foto pendiente»**: lo que no exista no se pinta, y la sección se
+acomoda a lo que haya (`grid-template-columns: repeat(auto-fit, ...)`).
+
+**Dos protagonistas, grandes y lado a lado** (`medios.destacados`):
+
+- `domo-bananeira.jpg` — la pieza fuerte. Dice de un golpe las tres cosas: que aquí
+  se practica capoeira, que el lugar es este y que la cascada está al frente.
+- `chorrera-loop.mp4` — el agua cayendo, viva.
+
+Las dos son verticales y **casi de la misma proporción** (0,563 y 0,5625), así que
+en una pareja de tarjetas 9/16 entran **enteras, sin recorte**. Eso importa sobre
+todo para la de bananeira: el valle va a la izquierda y el cuerpo al centro, y
+cualquier recorte lateral se come una de las dos cosas. Por eso no va a miniatura
+ni a franja apaisada.
+
+**Tres de apoyo, en miniatura dentro del panel** (`medios.apoyo`):
+
+- `domo-interior.jpg` — el espacio donde se entrena, de pareja con la de bananeira:
+  una enseña el sitio y la otra el sitio en uso.
+- `domo-terraza-niebla.jpg` — atmósfera, no información. No explica nada.
+- `chorrera.jpg` — el valle desde el filo, con la cascada entre niebla.
+
+Las miniaturas van en formato **vertical (4/5)**, que es el de las fotos del domo:
+recortarlas a apaisado les come la estructura triangular.
+
+**El clip.** Capa HTML encima del canvas, nunca textura WebGL: `muted loop
+playsinline preload="none"`, arrancado a mano al llegar a la parada. Con
+`prefers-reduced-motion` o si la reproducción falla, queda el póster, que es el
+mismo encuadre: el cambio no mueve la composición. **Ya no lleva ningún velo
+encima**: los degradados de legibilidad que le había puesto arriba y abajo eran lo
+que lo dejaba lavado contra el fondo verde. El velo que queda es sobre el canvas 3D,
+y bajó del 78 % al 42 % — lo justo para que la calabaza no compita.
+
+**Peso y carga.** El material de Guatoc suma 1,1 MB. Ninguno de esos bytes se pide
+hasta que el visitante llega a la parada del lugar: tanto la pareja de destacados
+como las miniaturas del panel solo se montan cuando esa parada está activa, y las
+miniaturas van además con `loading="lazy"` y `decoding="async"`. Todas las imágenes
+llevan `width`/`height` para que no salte el layout.
+
+**Las fotos de los instructores** (`public/instructores/*.png`) entran en la parada
+de los mestres. Siguen fuera del repo por `.gitignore` (fotos de personas): están en
+el deploy y en el worktree, no en el commit. Si alguna no cargara, la ficha ocupa el
+ancho sola — nunca un recuadro punteado.
 
 ## Fallback (sin cambios de fondo)
 
@@ -117,7 +140,13 @@ Ninguno de estos se vio a simple vista; salieron con lupa al 240 %:
    **rodaja de tronco**. Rayas más finas, menos contraste y una sombra hacia el fondo.
 4. En vertical le faltaba la punta al instrumento por unos pocos por ciento.
 5. La marca y el botón se perdían sobre el agua clara del clip: velo arriba.
-6. Con seis paradas la columna de puntos del rail se montaba sobre el panel.
+6. Con seis paradas la columna de puntos del rail se montaba sobre el panel, y
+   con el material del lugar se montaba encima de las fotos. En celular pasó a ser
+   una **fila de puntos justo encima del panel**, que es el patrón que corresponde
+   ahí y no choca con nada.
+7. Los atributos `width`/`height` del `<img>` le ganaban a `aspect-ratio` porque
+   nadie soltaba la altura: las miniaturas salían estiradas. `height: auto` no
+   sobra en esa regla.
 
 ## Rendimiento (lo medido y lo no medido)
 
@@ -130,13 +159,12 @@ Ninguno de estos se vio a simple vista; salieron con lupa al 240 %:
 ## Qué queda pendiente
 
 1. **Probar en celular real de gama media-baja**, con el clip.
-2. Dos fotos de Guatoc (`El terreiro`, `La casa`) y el segundo video (`El camino`).
-3. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador;
+2. La copia dice «la cascada más alta de Colombia» tal como la dictó el operador;
    en el cuerpo no se nombra la cascada (solo el pie de foto dice «La Chorrera entre
    niebla»). Si quieren nombrarla en el texto, es una línea en `contenido.js`.
-4. Unificar la paleta de la página 2D con la de Guatoc.
-5. `package-lock.json` sigue sin `three`: `npm install` acá escribiría en el
+3. Unificar la paleta de la página 2D con la de Guatoc.
+4. `package-lock.json` sigue sin `three`: `npm install` acá escribiría en el
    `node_modules` compartido con el otro carril. Toca `npm install --package-lock-only`
    al juntar.
-6. El hook `orchestrator-edit-guard.sh` bloquea `Write`/`Edit` en esta sesión pese a
+5. El hook `orchestrator-edit-guard.sh` bloquea `Write`/`Edit` en esta sesión pese a
    ser el carril de implementación; todo esto se escribió por Bash.

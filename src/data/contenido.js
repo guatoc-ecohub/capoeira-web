@@ -191,39 +191,61 @@ export const contenido = {
       },
     ],
   },
-  // Huecos reservados para el material de Guatoc que todavía no existe.
-  // Las fotos van en los PANELES del recorrido, no pegadas al instrumento.
-  // Para enchufarlas: ponga la ruta en `src`.
+  // Material de Guatoc. Ni una foto va pegada a la geometría del berimbau: todas
+  // viven en la parada del lugar. Nada de huecos de taller — lo que no exista,
+  // no se pinta, y la sección se acomoda a lo que haya.
+  //
+  // Para sumar material: agregue la entrada con su `src`. `destacados` se pinta
+  // grande (dos piezas verticales, una al lado de la otra); `apoyo`, en miniatura
+  // dentro del panel. Todo se descarga SOLO al llegar a esta parada.
   medios: {
-    titulo: 'Guatoc en imágenes',
-    nota: 'Las fotos y los videos del lugar se enchufan en src/data/contenido.js → medios.',
-    pendienteFoto: 'Foto pendiente',
-    pendienteVideo: 'Video pendiente',
-    // Tres fotos narrativas para la parada del LUGAR.
-    fotos: [
+    titulo: 'Guatoc',
+    destacados: [
       {
-        id: 'niebla',
-        src: '/guatoc/chorrera.jpg',
-        titulo: 'La Chorrera entre niebla',
-        alt: 'El filo de la montaña con la cascada asomando entre la niebla, visto desde Guatoc',
+        id: 'bananeira',
+        tipo: 'foto',
+        src: '/guatoc/domo-bananeira.jpg',
+        ancho: 574,
+        alto: 1020,
+        titulo: 'Bananeira en el domo',
+        alt: 'Una persona en bananeira dentro del domo geodésico de Guatoc, sobre el piso de madera en espiga, con el ventanal triangular y el valle al fondo',
       },
-      { id: 'terreiro', src: null, titulo: 'El terreiro', alt: 'El espacio donde se arma la roda en Guatoc' },
-      { id: 'casa', src: null, titulo: 'La casa', alt: 'La casa de Guatoc y sus corredores' },
-    ],
-    // videos[0] es el material principal de la parada del lugar: se pinta como
-    // capa HTML encima del canvas, nunca como textura WebGL. Viene sin pista de
-    // audio de origen, que es lo que deja que un navegador lo reproduzca solo.
-    videos: [
       {
         id: 'chorrera',
+        tipo: 'video',
         src: '/guatoc/chorrera-loop.mp4',
         poster: '/guatoc/chorrera-poster.jpg',
-        vertical: true,
+        ancho: 720,
+        alto: 1280,
         titulo: 'El agua cayendo',
-        pie: 'Bucle de tres segundos, sin sonido',
         alt: 'La cascada más alta de Colombia cayendo por el filo de la montaña, frente a Guatoc',
       },
-      { id: 'camino', src: null, poster: null, titulo: 'El camino', pie: 'Cómo se llega hasta Guatoc' },
+    ],
+    apoyo: [
+      {
+        id: 'domo-interior',
+        src: '/guatoc/domo-interior.jpg',
+        ancho: 964,
+        alto: 1280,
+        titulo: 'El domo por dentro',
+        alt: 'El interior del domo geodésico: piso de madera, estructura triangular, estantería y mecedora',
+      },
+      {
+        id: 'terraza',
+        src: '/guatoc/domo-terraza-niebla.jpg',
+        ancho: 964,
+        alto: 1280,
+        titulo: 'La terraza en la niebla',
+        alt: 'La terraza de madera del domo, el árbol y la niebla tapando el valle',
+      },
+      {
+        id: 'valle',
+        src: '/guatoc/chorrera.jpg',
+        ancho: 1280,
+        alto: 964,
+        titulo: 'El valle desde el filo',
+        alt: 'El filo de la montaña con la cascada asomando entre la niebla, visto desde Guatoc',
+      },
     ],
     // Enganche de audio: sin sonido por ahora, el navegador bloquea el autoplay.
     // Ponga la ruta del toque y conecte reproducirToque() en Berimbau3D.jsx.

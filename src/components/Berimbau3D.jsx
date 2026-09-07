@@ -21,22 +21,22 @@ function paradaDesdeHash(paradas) {
 // Ni las fotos ni el video van pegados a la geometria del berimbau: viven en
 // las paradas del recorrido, que es donde cuentan algo.
 
-function Foto({ foto, etiqueta, className }) {
-  const [visible, setVisible] = useState(Boolean(foto.src))
-  if (visible) {
-    return (
-      <figure className={className}>
-        <img src={foto.src} alt={foto.alt} loading="lazy" onError={() => setVisible(false)} />
-        <figcaption>{foto.titulo}</figcaption>
-      </figure>
-    )
-  }
+function Foto({ foto, className, conPie = true, ...resto }) {
+  const [visible, setVisible] = useState(true)
+  if (!foto || !foto.src || !visible) return null
   return (
-    <figure className={`${className} ${className}--vacia`}>
-      <span className="berimbau__marca-vacia" aria-hidden="true">◎</span>
-      <figcaption>
-        {foto.titulo} · <span className="berimbau__pendiente">{etiqueta}</span>
-      </figcaption>
+    <figure className={className}>
+      <img
+        src={foto.src}
+        alt={foto.alt}
+        width={foto.ancho}
+        height={foto.alto}
+        loading="lazy"
+        decoding="async"
+        onError={() => setVisible(false)}
+        {...resto}
+      />
+      {conPie ? <figcaption>{foto.titulo}</figcaption> : null}
     </figure>
   )
 }
@@ -45,7 +45,7 @@ function Foto({ foto, etiqueta, className }) {
 // con preload="none" nada se baja hasta que el visitante llega a esta parada.
 // Con prefers-reduced-motion o si el video no puede correr, queda el cuadro
 // fijo, que es el mismo encuadre: el cambio no mueve la composicion.
-function MediaLugar({ video, reducirMovimiento }) {
+function VideoLugar({ video, reducirMovimiento }) {
   const [fallo, setFallo] = useState(false)
   const videoRef = useRef(null)
   const mostrarVideo = Boolean(video.src) && !reducirMovimiento && !fallo
@@ -63,7 +63,7 @@ function MediaLugar({ video, reducirMovimiento }) {
     return (
       <video
         ref={videoRef}
-        className="berimbau__lugar-media"
+        className="berimbau__destacado"
         src={video.src}
         poster={video.poster || undefined}
         aria-label={video.alt}
@@ -76,9 +76,34 @@ function MediaLugar({ video, reducirMovimiento }) {
     )
   }
   if (video.poster) {
-    return <img className="berimbau__lugar-media" src={video.poster} alt={video.alt} />
+    return <img className="berimbau__destacado" src={video.poster} alt={video.alt} decoding="async" />
   }
   return null
+}
+
+// Las dos piezas grandes del lugar, una al lado de la otra: la bananeira dentro
+// del domo (que dice de un golpe que aquí se practica capoeira, que el lugar es
+// este y que la cascada está al frente) y el agua cayendo. Las dos son verticales
+// y casi de la misma proporcion, asi que entran enteras: no se recorta ninguna.
+// La de bananeira sobre todo NO admite recorte lateral: el valle va a la
+// izquierda y el cuerpo al centro.
+function MediosLugar({ destacados, reducirMovimiento }) {
+  return destacados.map((pieza) => {
+    if (pieza.tipo === 'video') {
+      return <VideoLugar key={pieza.id} video={pieza} reducirMovimiento={reducirMovimiento} />
+    }
+    return (
+      <img
+        key={pieza.id}
+        className="berimbau__destacado"
+        src={pieza.src}
+        alt={pieza.alt}
+        width={pieza.ancho}
+        height={pieza.alto}
+        decoding="async"
+      />
+    )
+  })
 }
 
 // -------------------------------------------------------------- paneles HTML
@@ -133,8 +158,8 @@ function PanelMestres() {
           <li key={ficha.nombre}>
             <Foto
               foto={{ src: ficha.foto, alt: ficha.fotoAlt, titulo: ficha.nombre }}
-              etiqueta={instructores.fotoPendiente}
               className="berimbau__mestre-foto"
+              conPie={false}
             />
             <div>
               <span className="berimbau__lista-titulo">{ficha.nombre}</span>
@@ -183,8 +208,8 @@ function PanelLugar({ parada }) {
       </ul>
       <p className="berimbau__rotulo">{medios.titulo}</p>
       <div className="berimbau__fotos">
-        {medios.fotos.map((foto) => (
-          <Foto key={foto.id} foto={foto} etiqueta={medios.pendienteFoto} className="berimbau__foto" />
+        {medios.apoyo.map((foto) => (
+          <Foto key={foto.id} foto={foto} className="berimbau__foto" />
         ))}
       </div>
     </>
@@ -325,7 +350,7 @@ export default function Berimbau3D({ alCaer, verTexto }) {
   useEffect(() => {
     const control = controlRef.current
     if (!control) return undefined
-    const tapado = angosto && enLugar && Boolean(medios.videos[0] && medios.videos[0].src)
+    const tapado = angosto && enLugar && medios.destacados.some((pieza) => pieza.src)
     if (!tapado) {
       control.pausar(false)
       return undefined
@@ -335,7 +360,7 @@ export default function Berimbau3D({ alCaer, verTexto }) {
       window.clearTimeout(espera)
       control.pausar(false)
     }
-  }, [angosto, enLugar, estado, medios.videos])
+  }, [angosto, enLugar, estado, medios.destacados])
 
   const irAParada = useCallback(
     (destino) => {
@@ -421,7 +446,7 @@ export default function Berimbau3D({ alCaer, verTexto }) {
 
       {enLugar ? (
         <div className="berimbau__lugar-marco">
-          <MediaLugar video={medios.videos[0]} reducirMovimiento={reducirMovimiento} />
+          <MediosLugar destacados={medios.destacados} reducirMovimiento={reducirMovimiento} />
         </div>
       ) : null}
 
