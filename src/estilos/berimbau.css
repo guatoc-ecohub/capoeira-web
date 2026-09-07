@@ -1,13 +1,29 @@
-/* Recorrido 3D del berimbau. Vive aparte de index.css porque es una
-   experiencia completa y no una seccion mas de la pagina. Usa las mismas
-   variables de color del sitio: no se define ningun color suelto. */
+/* Recorrido 3D del berimbau.
+   Paleta de Guatoc: verde casi negro de fondo, tres luminancias de un mismo
+   blanco verdoso para la tinta, la clorofila encendida como acento y el dorado
+   del atardecer para lo cálido puntual. El acento es para figuras, índices y
+   estados activos: nunca para párrafos.
+   Vive aparte de index.css porque es una experiencia completa, no una sección
+   más de la página. */
 
 .berimbau {
+  --bg: #07100b;
+  --ink: #f0f6f1;
+  --ink-soft: #c3d5c8;
+  --ink-quiet: #8aa392;
+  --accent: #58e39a;
+  --accent-dim: #2e9463;
+  --warm: #e6b450;
+  --rule: rgb(195 213 200 / 20%);
+  --rule-soft: rgb(195 213 200 / 11%);
+  --glass: rgb(7 16 11 / 88%);
+  --glass-quiet: rgb(7 16 11 / 62%);
+
   position: fixed;
   inset: 0;
   overflow: hidden;
-  background: var(--c-bg);
-  color: var(--c-text);
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .berimbau__escena {
@@ -22,19 +38,20 @@
   height: 100%;
 }
 
-/* Adentro de la cabaca el fondo es claro: sin sombra propia, la marca y el rail
-   se pierden contra la pared. */
+.berimbau ::selection { background: rgb(88 227 154 / 30%); color: var(--ink); }
+.berimbau :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
 .berimbau__marca {
   position: absolute;
   top: var(--sp-2);
   left: var(--sp-2);
-  z-index: 3;
-  text-shadow: 0 1px 10px #16100a, 0 0 3px #16100a;
+  z-index: 4;
+  text-shadow: 0 1px 10px var(--bg), 0 0 3px var(--bg);
   pointer-events: none;
 }
 
 .berimbau__marca-nombre {
-  color: var(--c-text);
+  color: var(--ink);
   font-family: var(--display);
   font-size: 1.15rem;
   font-weight: 800;
@@ -43,7 +60,7 @@
 }
 
 .berimbau__marca-lema {
-  color: var(--c-accent);
+  color: var(--accent);
   font-size: 0.74rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -54,29 +71,85 @@
   position: absolute;
   top: var(--sp-2);
   right: var(--sp-2);
-  z-index: 4;
+  z-index: 5;
   padding: 0.5rem 0.95rem;
+  border-color: var(--rule);
+  background: var(--glass);
+  color: var(--ink);
   font-size: 0.85rem;
-  background: #16100acc;
   backdrop-filter: blur(8px);
 }
+
+.berimbau__texto-boton:hover { border-color: var(--accent); background: var(--glass); }
 
 .berimbau__cargando,
 .berimbau__aviso {
   position: absolute;
   left: 50%;
-  z-index: 4;
+  z-index: 5;
   padding: 0.5rem 1rem;
-  border: 1px solid var(--c-line);
+  border: 1px solid var(--rule);
   border-radius: 999px;
-  background: #16100ae6;
-  color: var(--c-muted);
+  background: var(--glass);
+  color: var(--ink-soft);
   font-size: 0.85rem;
   transform: translateX(-50%);
 }
 
 .berimbau__cargando { top: 50%; }
 .berimbau__aviso { bottom: calc(var(--sp-2) + 0.4rem); }
+
+/* --------------------------------------------- material de Guatoc, capa HTML */
+/* El clip nunca es textura WebGL. En celular llena la franja de canvas que deja
+   el panel; en pantalla ancha va encuadrado en vertical, que es como está
+   filmado, sin estirarlo ni recortarle la caída al agua. */
+
+/* Velo sobre el canvas mientras se muestra el lugar: sin el, la ventana de
+   video se lee como una calcomania pegada sobre la calabaza, que es justo lo
+   que hay que evitar. */
+.berimbau__velo {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: rgb(7 16 11 / 78%);
+  pointer-events: none;
+}
+
+.berimbau__lugar-marco {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 2;
+  height: 48svh;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.berimbau__lugar-marco::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 0;
+  height: 8rem;
+  background: linear-gradient(180deg, transparent, var(--bg));
+}
+
+.berimbau__lugar-marco::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 1;
+  height: 6rem;
+  background: linear-gradient(180deg, rgb(7 16 11 / 85%), transparent);
+}
+
+.berimbau__lugar-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 38%;
+}
 
 /* ------------------------------------------------------------------ panel */
 
@@ -89,17 +162,19 @@
   max-height: 52svh;
   padding: var(--sp-2) var(--sp-2) calc(var(--sp-2) + 0.4rem);
   overflow-y: auto;
-  border-top: 1px solid var(--c-line);
-  background: linear-gradient(180deg, #16100acc, #16100af7 22%);
+  border-top: 1px solid var(--rule);
+  background: linear-gradient(180deg, rgb(7 16 11 / 82%), var(--bg) 22%);
   backdrop-filter: blur(10px);
   overscroll-behavior: contain;
 }
+
+.berimbau[data-parada='reserva'] .berimbau__panel { max-height: 74svh; }
 
 .berimbau__toque {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--c-accent);
+  color: var(--accent);
   font-size: 0.74rem;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -108,21 +183,22 @@
 
 .berimbau__toque span {
   padding: 0.1rem 0.45rem;
-  border: 1px solid var(--c-line);
+  border: 1px solid var(--rule);
   border-radius: 4px;
-  color: var(--c-muted);
+  color: var(--ink-quiet);
   font-size: 0.64rem;
 }
 
 .berimbau__titulo {
   margin-top: 0.35rem;
+  color: var(--ink);
   font-size: clamp(2rem, 8vw, 2.9rem);
   font-weight: 800;
 }
 
 .berimbau__toque-nota {
   margin-top: 0.2rem;
-  color: var(--c-gold);
+  color: var(--ink-quiet);
   font-size: 0.86rem;
   font-style: italic;
 }
@@ -130,24 +206,33 @@
 .berimbau__entradilla {
   margin-top: 0.6rem;
   max-width: 46ch;
-  color: var(--c-text);
+  color: var(--ink);
   font-size: 0.98rem;
 }
 
 .berimbau__texto {
   margin-top: 0.5rem;
   max-width: 46ch;
-  color: var(--c-muted);
+  color: var(--ink-soft);
   font-size: 0.92rem;
 }
 
 .berimbau__kicker {
   margin-top: 0.5rem;
-  color: var(--c-gold);
+  color: var(--ink-soft);
   font-family: var(--display);
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.berimbau__rotulo {
+  margin-top: var(--sp-2);
+  color: var(--ink-quiet);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
@@ -157,17 +242,17 @@
   gap: 0.5rem;
   margin-top: 0.7rem;
   padding: 0.3rem 0.85rem;
-  border: 1px solid rgb(163 188 90 / 45%);
+  border: 1px solid rgb(88 227 154 / 40%);
   border-radius: 999px;
-  background: rgb(163 188 90 / 10%);
-  color: var(--c-verde);
+  background: rgb(88 227 154 / 9%);
+  color: var(--accent);
   font-size: 0.82rem;
   font-weight: 700;
 }
 
 .berimbau__precio {
   margin-top: 0.5rem;
-  color: var(--c-accent);
+  color: var(--warm);
   font-family: var(--display);
   font-size: clamp(2.8rem, 12vw, 4rem);
   font-weight: 800;
@@ -177,16 +262,22 @@
 .berimbau__nota {
   margin-top: 0.55rem;
   max-width: 48ch;
-  color: var(--c-muted);
+  color: var(--ink-quiet);
   font-size: 0.82rem;
 }
 
-.berimbau__pendiente {
-  color: var(--c-accent);
-  font-weight: 700;
+.berimbau__pendiente { color: var(--accent); font-weight: 700; }
+.berimbau__numero { color: var(--accent); font-size: 0.85em; }
+.berimbau__cta { margin-top: var(--sp-2); }
+
+.berimbau .btn--primario {
+  background: var(--accent);
+  color: #04120a;
+  box-shadow: 0 6px 22px rgb(88 227 154 / 22%);
 }
 
-.berimbau__cta { margin-top: var(--sp-2); }
+.berimbau .btn--primario:hover { background: #6cf0ab; box-shadow: 0 8px 26px rgb(88 227 154 / 32%); }
+.berimbau .btn--fantasma { border-color: var(--rule); background: rgb(240 246 241 / 4%); color: var(--ink); }
 
 .berimbau__lista {
   display: grid;
@@ -200,44 +291,156 @@
   display: grid;
   gap: 0.15rem;
   padding-left: 0.85rem;
-  border-left: 2px solid var(--c-line);
+  border-left: 2px solid var(--rule-soft);
 }
 
-.berimbau__lista li:first-child { border-left-color: var(--c-accent); }
+.berimbau__lista li:first-child { border-left-color: var(--accent); }
 
 .berimbau__lista-titulo {
-  color: var(--c-text);
+  color: var(--ink);
   font-family: var(--display);
   font-size: 1.25rem;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.berimbau__lista-detalle {
-  color: var(--c-gold);
-  font-size: 0.82rem;
-}
-
-.berimbau__lista-texto {
-  max-width: 48ch;
-  color: var(--c-muted);
-  font-size: 0.85rem;
-}
-
+.berimbau__lista-detalle { color: var(--ink-soft); font-size: 0.82rem; }
+.berimbau__lista-texto { max-width: 48ch; color: var(--ink-quiet); font-size: 0.85rem; }
 .berimbau__lista .badge { justify-self: start; margin-top: 0.2rem; }
 
-.berimbau__pasos {
-  display: flex;
-  gap: 0.6rem;
-  margin-top: var(--sp-2);
+.berimbau .badge--roda,
+.berimbau .badge--activa { background: var(--accent); color: #04120a; }
+.berimbau .badge--agotada { border: 1px solid var(--rule); background: transparent; color: var(--ink-quiet); }
+
+/* mestres: la foto recortada del instructor al lado de su ficha */
+.berimbau__mestres {
+  display: grid;
+  gap: var(--sp-2);
+  margin-top: 0.8rem;
+  padding: 0;
+  list-style: none;
 }
+
+.berimbau__mestres li {
+  display: grid;
+  grid-template-columns: 4.6rem 1fr;
+  gap: 0.85rem;
+  align-items: start;
+}
+
+.berimbau__mestres li > div { display: grid; gap: 0.15rem; }
+
+.berimbau__mestre-foto {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+  place-items: center;
+}
+
+.berimbau__mestre-foto img {
+  width: 4.6rem;
+  height: 5.4rem;
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgb(88 227 154 / 10%), rgb(7 16 11 / 60%));
+  object-fit: cover;
+  object-position: top center;
+}
+
+.berimbau__mestre-foto figcaption { display: none; }
+
+.berimbau__mestre-foto--vacia {
+  width: 4.6rem;
+  height: 5.4rem;
+  border: 1px dashed var(--accent-dim);
+  border-radius: 10px;
+  color: var(--ink-quiet);
+  font-size: 0.55rem;
+  text-align: center;
+}
+
+.berimbau__mestre-foto--vacia figcaption { display: block; padding: 0 0.2rem; }
+.berimbau__marca-vacia { color: var(--accent-dim); font-size: 1.4rem; line-height: 1; }
+
+/* fotos del lugar */
+.berimbau__fotos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.berimbau__foto {
+  display: grid;
+  gap: 0.3rem;
+  margin: 0;
+}
+
+.berimbau__foto img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.berimbau__foto figcaption { color: var(--ink-quiet); font-size: 0.68rem; line-height: 1.25; }
+
+.berimbau__foto--vacia {
+  place-items: center;
+  padding: 0.6rem 0.35rem;
+  border: 1px dashed var(--accent-dim);
+  border-radius: 8px;
+  text-align: center;
+}
+
+/* cohortes */
+.berimbau__cohortes {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.berimbau__cohortes li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid var(--rule-soft);
+  border-radius: 10px;
+  opacity: 0.6;
+}
+
+.berimbau__cohortes li[data-activa='true'] { border-color: var(--accent-dim); opacity: 1; }
+.berimbau__cohortes strong { margin-left: auto; color: var(--ink); font-family: var(--display); font-size: 1.15rem; }
+
+/* formulario dentro del recorrido */
+.berimbau .reserva-form {
+  max-width: none;
+  margin-top: var(--sp-2);
+  padding: var(--sp-2);
+  border-color: var(--rule);
+  background: rgb(240 246 241 / 3%);
+  box-shadow: none;
+}
+
+.berimbau .reserva-form__titulo { color: var(--ink); }
+.berimbau .campo label { color: var(--ink-quiet); }
+.berimbau .campo label > span { color: var(--accent); }
+.berimbau .campo input { border-color: var(--rule); background: rgb(4 10 7 / 70%); color: var(--ink); }
+.berimbau .campo input:focus { border-color: var(--accent); }
+.berimbau .reserva-form__estado { color: var(--accent); }
+
+.berimbau__pasos { display: flex; gap: 0.6rem; margin-top: var(--sp-2); }
 
 .berimbau__paso {
   padding: 0.45rem 0.9rem;
-  border: 1px solid var(--c-line);
+  border: 1px solid var(--rule);
   border-radius: 999px;
   background: transparent;
-  color: var(--c-muted);
+  color: var(--ink-soft);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -245,32 +448,24 @@
   cursor: pointer;
 }
 
-.berimbau__paso:hover:not(:disabled) { border-color: var(--c-accent); color: var(--c-text); }
+.berimbau__paso:hover:not(:disabled) { border-color: var(--accent); color: var(--ink); }
 .berimbau__paso:disabled { opacity: 0.35; cursor: default; }
 
 /* ------------------------------------------------------------------- rail */
 
-/* En pantallas angostas el rail se cuelga debajo del encabezado: centrado a
-   media altura se montaba sobre el panel. */
 .berimbau__rail {
   position: absolute;
   top: 4.7rem;
   right: 0.55rem;
-  z-index: 3;
+  z-index: 4;
   padding: 0.5rem 0.6rem;
-  border: 1px solid var(--c-line);
+  border: 1px solid var(--rule);
   border-radius: var(--radio);
-  background: #16100ae0;
+  background: var(--glass);
   backdrop-filter: blur(8px);
 }
 
-.berimbau__rail ol {
-  display: grid;
-  gap: 0.15rem;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
+.berimbau__rail ol { display: grid; gap: 0.15rem; padding: 0; margin: 0; list-style: none; }
 
 .berimbau__rail-boton {
   display: flex;
@@ -280,38 +475,33 @@
   padding: 0.4rem 0.35rem;
   border: 0;
   background: transparent;
-  color: var(--c-muted);
+  color: var(--ink-quiet);
   text-align: left;
   cursor: pointer;
 }
 
 .berimbau__rail-marca {
-  position: relative;
   flex: none;
   width: 11px;
   height: 11px;
-  border: 1px solid var(--c-muted);
+  border: 1px solid var(--ink-quiet);
   border-radius: 50%;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
-.berimbau__rail-boton:hover .berimbau__rail-marca { border-color: var(--c-accent); }
+.berimbau__rail-boton:hover .berimbau__rail-marca { border-color: var(--accent); }
 
 .berimbau__rail-boton[aria-current='step'] .berimbau__rail-marca {
-  border-color: var(--c-accent);
-  background: var(--c-accent);
+  border-color: var(--accent);
+  background: var(--accent);
   transform: scale(1.25);
-  box-shadow: 0 0 12px #f28c1e99;
+  box-shadow: 0 0 12px rgb(88 227 154 / 50%);
 }
 
-.berimbau__rail-texto {
-  display: none;
-  flex-direction: column;
-  line-height: 1.15;
-}
+.berimbau__rail-texto { display: none; flex-direction: column; line-height: 1.15; }
 
 .berimbau__rail-toque {
-  color: var(--c-accent);
+  color: var(--accent);
   font-size: 0.6rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -319,76 +509,16 @@
 }
 
 .berimbau__rail-titulo {
-  color: var(--c-muted);
+  color: var(--ink-soft);
   font-family: var(--display);
   font-size: 1rem;
   font-weight: 700;
   text-transform: uppercase;
 }
 
-.berimbau__rail-boton[aria-current='step'] .berimbau__rail-titulo { color: var(--c-text); }
+.berimbau__rail-boton[aria-current='step'] .berimbau__rail-titulo { color: var(--ink); }
 .berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: flex; }
-
 .berimbau__pista { display: none; }
-
-/* ---------------------------------------------------- huecos de foto y video */
-
-.berimbau__medios {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.berimbau__video {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 8rem;
-  padding: 0.45rem;
-  border: 1px solid var(--c-line);
-  border-radius: 10px;
-  background: #16100ad9;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  will-change: transform;
-  pointer-events: auto;
-}
-
-.berimbau__video video {
-  display: block;
-  width: 100%;
-  border-radius: 6px;
-  background: #000;
-}
-
-.berimbau__video--vacio {
-  display: grid;
-  place-items: center;
-  gap: 0.15rem;
-  aspect-ratio: 16 / 10;
-  border-style: dashed;
-  border-color: var(--c-accent);
-  text-align: center;
-}
-
-.berimbau__video-marca { color: var(--c-accent); font-size: 1.35rem; line-height: 1; }
-
-.berimbau__video-titulo {
-  color: var(--c-text);
-  font-family: var(--display);
-  font-size: 0.95rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.berimbau__video-pie {
-  color: var(--c-muted);
-  font-size: 0.66rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 
 /* ------------------------------------------------------- barra de cambio 2D */
 
@@ -402,12 +532,7 @@
   background: var(--c-surface);
 }
 
-.cambio-modo p {
-  flex: 1 1 18rem;
-  color: var(--c-muted);
-  font-size: 0.86rem;
-}
-
+.cambio-modo p { flex: 1 1 18rem; color: var(--c-muted); font-size: 0.86rem; }
 .cambio-modo .btn { padding: 0.45rem 1rem; font-size: 0.9rem; }
 
 /* ------------------------------------------------------------ pantallas anchas */
@@ -418,20 +543,36 @@
     right: auto;
     bottom: auto;
     width: min(31rem, 42vw);
-    max-height: 78svh;
+    max-height: 80svh;
     padding: var(--sp-3);
-    border: 1px solid var(--c-line);
+    border: 1px solid var(--rule);
     border-radius: var(--radio);
-    background: #16100af0;
+    background: var(--glass);
     transform: translateY(-50%);
     margin-left: var(--sp-3);
   }
 
-  .berimbau__rail {
+  .berimbau[data-parada='reserva'] .berimbau__panel { max-height: 86svh; }
+
+  /* El clip está filmado en vertical: en ancho va como ventana, no como franja
+     estirada. Queda entre el panel y el rail, sin taparlos. */
+  .berimbau__lugar-marco {
     top: 50%;
-    right: var(--sp-3);
+    right: calc(var(--sp-3) + 15.5rem);
+    left: auto;
+    width: min(19rem, 21vw);
+    height: auto;
+    aspect-ratio: 9 / 16;
+    max-height: 64svh;
+    border: 1px solid var(--rule);
+    border-radius: var(--radio);
+    box-shadow: 0 24px 60px rgb(2 6 4 / 65%);
     transform: translateY(-50%);
   }
+
+  .berimbau__lugar-marco::after { display: none; }
+
+  .berimbau__rail { top: 50%; right: var(--sp-3); transform: translateY(-50%); }
   .berimbau__rail-boton { padding: 0.45rem 0.5rem; }
   .berimbau__rail-texto { display: flex; }
   .berimbau__rail-titulo { font-size: 1.1rem; }
@@ -441,28 +582,31 @@
     max-width: 12rem;
     margin-top: var(--sp-2);
     padding-left: 0.35rem;
-    color: var(--c-muted);
+    color: var(--ink-quiet);
     font-size: 0.72rem;
   }
 
   .berimbau__marca { top: var(--sp-3); left: var(--sp-3); }
   .berimbau__texto-boton { top: var(--sp-3); right: var(--sp-3); }
-  .berimbau__video { width: 9.5rem; }
   .cambio-modo { padding: 0.7rem var(--sp-3); }
+  .berimbau__mestres li { grid-template-columns: 5.4rem 1fr; }
+  .berimbau__mestre-foto img,
+  .berimbau__mestre-foto--vacia { width: 5.4rem; height: 6.4rem; }
 }
 
-/* Celular angosto: la marca y el boton de texto se pisaban en 390 px. */
+/* Celular angosto: la marca y el botón de texto se pisaban en 390 px. */
 @media (max-width: 560px) {
   .berimbau__marca-nombre { font-size: 1rem; letter-spacing: 0.06em; }
   .berimbau__marca-lema { font-size: 0.62rem; letter-spacing: 0.1em; }
   .berimbau__texto-boton { padding: 0.4rem 0.7rem; font-size: 0.72rem; }
-  .berimbau__video { width: 6.5rem; }
+  /* Con seis paradas la columna de puntos se montaba sobre el panel. */
+  .berimbau__rail { top: 4.3rem; padding: 0.35rem 0.5rem; }
+  .berimbau__rail-boton { padding: 0.28rem 0.3rem; }
   /* Solo los puntos: la etiqueta abierta se montaba sobre la escena y el
-     titulo de la parada ya esta grande en el panel. */
+     título de la parada ya está grande en el panel. */
   .berimbau__rail-boton[aria-current='step'] .berimbau__rail-texto { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .berimbau__rail-marca,
-  .berimbau__video { transition: none; }
+  .berimbau__rail-marca { transition: none; }
 }

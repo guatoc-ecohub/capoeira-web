@@ -16,7 +16,7 @@ export const contenido = {
     tituloLineas: ['CAMPAMENTO DE', 'CAPOEIRA'],
     tagline: 'Artes marciales aplicadas al jogo + fundamentos de competición',
     cupos: '12 cupos limitados · trabajo cercano y personalizado',
-    reservaCta: 'Reservar cupo · $100.000',
+    reservaCta: 'Reservar cupo',
     instructoresCta: 'Conocer los mestres',
   },
   agenda: {
@@ -123,8 +123,10 @@ export const contenido = {
     lema: 'Artes marciales aplicadas al jogo',
   },
   // Recorrido 3D. El berimbau manda la roda: su toque decide qué juego se juega,
-  // así que el instrumento es el menú. El orden de `paradas` es el mismo de
-  // CAMARA en src/tresd/paradas.js — si cambia uno, cambian los dos.
+  // así que el instrumento es el menú. El recorrido NO es un adorno con un botón
+  // al final: entre las seis paradas tiene que caber toda la información del
+  // evento (qué es, cuándo, quiénes, qué se entrena, dónde y cómo reservar).
+  // El orden de `paradas` es el mismo de CAMARA en src/tresd/paradas.js.
   berimbau: {
     marca: 'Guatoc Capoeira',
     titulo: 'El berimbau manda',
@@ -163,13 +165,20 @@ export const contenido = {
         entradilla: 'Tres miradas distintas sobre el mismo jogo, cada una con su disciplina de combate.',
       },
       {
+        id: 'tecnica',
+        toque: 'Benguela',
+        toqueNota: 'Toque lento, jogo de dentro: la técnica se trabaja de cerca.',
+        titulo: 'Técnica para el jogo',
+        entradilla: 'Cuatro disciplinas entran a la roda sin sacar a nadie de su contexto.',
+      },
+      {
         id: 'lugar',
         toque: 'Cavalaria',
         toqueNota: 'El toque que avisa quién viene llegando al terreiro.',
         titulo: 'El lugar',
-        entradilla: 'Guatoc para entrenar, el coliseo de la vereda El Curí para cerrar.',
+        entradilla: 'Guatoc mira de frente la cascada más alta de Colombia. Ahí se entrena, y el coliseo de la vereda El Curí cierra el campamento.',
         sedes: [
-          { nombre: 'Guatoc', detalle: 'Donde se entrena y se arma la roda de bienvenida. Sábado y domingo.' },
+          { nombre: 'Guatoc', detalle: 'Frente a la cascada más alta de Colombia. Ahí se entrena y se arma la roda de bienvenida: sábado y domingo.' },
           { nombre: 'Coliseo de la vereda El Curí', detalle: 'La roda de despedida, el lunes a las 4:00 PM.' },
         ],
       },
@@ -183,26 +192,39 @@ export const contenido = {
     ],
   },
   // Huecos reservados para el material de Guatoc que todavía no existe.
-  // Para enchufarlo: ponga la ruta en `src` (las fotos entran como láminas dentro
-  // de la cabaça; los videos, como capa HTML encima del canvas).
+  // Las fotos van en los PANELES del recorrido, no pegadas al instrumento.
+  // Para enchufarlas: ponga la ruta en `src`.
   medios: {
     titulo: 'Guatoc en imágenes',
     nota: 'Las fotos y los videos del lugar se enchufan en src/data/contenido.js → medios.',
     pendienteFoto: 'Foto pendiente',
     pendienteVideo: 'Video pendiente',
+    // Tres fotos narrativas para la parada del LUGAR.
     fotos: [
-      { id: 'cancha', src: null, titulo: 'La cancha', alt: 'La cancha de Guatoc donde se arma la roda' },
+      {
+        id: 'niebla',
+        src: '/guatoc/chorrera.jpg',
+        titulo: 'La Chorrera entre niebla',
+        alt: 'El filo de la montaña con la cascada asomando entre la niebla, visto desde Guatoc',
+      },
+      { id: 'terreiro', src: null, titulo: 'El terreiro', alt: 'El espacio donde se arma la roda en Guatoc' },
       { id: 'casa', src: null, titulo: 'La casa', alt: 'La casa de Guatoc y sus corredores' },
-      { id: 'monte', src: null, titulo: 'El monte', alt: 'El monte alrededor de Guatoc' },
-      { id: 'coliseo', src: null, titulo: 'El coliseo', alt: 'Coliseo de la vereda El Curí' },
-      { id: 'mesa', src: null, titulo: 'La mesa', alt: 'La mesa larga del campamento' },
     ],
+    // videos[0] es el material principal de la parada del lugar: se pinta como
+    // capa HTML encima del canvas, nunca como textura WebGL. Viene sin pista de
+    // audio de origen, que es lo que deja que un navegador lo reproduzca solo.
     videos: [
-      { id: 'roda', src: null, poster: null, titulo: 'La roda', pie: 'Cómo suena y se mueve una roda en Guatoc' },
+      {
+        id: 'chorrera',
+        src: '/guatoc/chorrera-loop.mp4',
+        poster: '/guatoc/chorrera-poster.jpg',
+        vertical: true,
+        titulo: 'El agua cayendo',
+        pie: 'Bucle de tres segundos, sin sonido',
+        alt: 'La cascada más alta de Colombia cayendo por el filo de la montaña, frente a Guatoc',
+      },
       { id: 'camino', src: null, poster: null, titulo: 'El camino', pie: 'Cómo se llega hasta Guatoc' },
     ],
-    // Grabado del fondo de la cabaça (se pinta como textura, no lleva texto vivo).
-    placa: { valor: '$100.000', pie: 'Reserva' },
     // Enganche de audio: sin sonido por ahora, el navegador bloquea el autoplay.
     // Ponga la ruta del toque y conecte reproducirToque() en Berimbau3D.jsx.
     audio: {
@@ -211,6 +233,7 @@ export const contenido = {
         { id: 'angola', src: null },
         { id: 'sao-bento-grande', src: null },
         { id: 'iuna', src: null },
+        { id: 'benguela', src: null },
         { id: 'cavalaria', src: null },
         { id: 'santa-maria', src: null },
       ],

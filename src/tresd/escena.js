@@ -12,18 +12,18 @@ import {
   PointLight,
   Scene,
   SRGBColorSpace,
-  TextureLoader,
   Vector3,
   WebGLRenderer,
 } from 'three'
 
-import { CAMARA, CABAZA, PARADAS_CON_MEDIOS } from './paradas.js'
-import { PALETA, animarBrasas, construirBerimbau, construirBrasas, ponerFoto } from './berimbau.js'
+import { CABAZA, CAMARA } from './paradas.js'
+import { PALETA, animarMotas, construirBerimbau, construirMotas } from './berimbau.js'
 
 const MAX_PIXEL_RATIO = 1.5
 const MIN_PIXEL_RATIO = 1
 const DURACION_MIN = 0.75
 const DURACION_MAX = 2.8
+const ANCHO_ANGOSTO = 800 // el mismo corte que usa el CSS para mover el panel
 
 function suavizar(t) {
   // Una sola curva de salida para todo el recorrido: sin tirones ni rebotes.
@@ -34,18 +34,14 @@ function limitar(valor, minimo, maximo) {
   return Math.min(Math.max(valor, minimo), maximo)
 }
 
-function puntos(lista) {
-  return lista.map((parada) => new Vector3(...parada.posicion))
-}
-
-function objetivos(lista) {
-  return lista.map((parada) => new Vector3(...parada.objetivo))
+function transicionSuave(valor, borde0, borde1) {
+  const t = limitar((valor - borde0) / (borde1 - borde0), 0, 1)
+  return t * t * (3 - 2 * t)
 }
 
 export function crearEscena(opciones) {
   const {
     contenedor,
-    medios,
     reducirMovimiento = false,
     paradaInicial = 0,
     alFallar = () => {},
@@ -81,64 +77,39 @@ export function crearEscena(opciones) {
   // -------------------------------------------------------------------- escena
   const escena = new Scene()
   escena.background = new Color(PALETA.fondo)
-  escena.fog = new FogExp2(PALETA.fondo, 0.021)
+  escena.fog = new FogExp2(PALETA.fondo, 0.019)
 
   const camara = new PerspectiveCamera(CAMARA[0].fov, 1, 0.05, 140)
   escena.add(camara)
 
-  const hemisferio = new HemisphereLight(0xf8efdf, 0x120c06, 0.5)
-  escena.add(hemisferio)
+  // Luz de noche verde: cielo frio arriba, tierra casi negra abajo.
+  escena.add(new HemisphereLight(PALETA.inkSoft, 0x060d08, 0.5))
 
-  const sol = new DirectionalLight(0xffd9a0, 0.9)
-  sol.position.set(5, 7, 9)
-  escena.add(sol)
+  const clave = new DirectionalLight(PALETA.ink, 0.85)
+  clave.position.set(5, 7, 9)
+  escena.add(clave)
 
-  const contraluz = new DirectionalLight(PALETA.verde, 0.22)
+  // Contraluz verde: es lo que hace que la madera conviva con el acento en vez
+  // de pelearse con el.
+  const contraluz = new DirectionalLight(PALETA.acento, 0.45)
   contraluz.position.set(-7, 2, -6)
   escena.add(contraluz)
 
-  const { grupo, grupoCabaza, marcos, anclas } = construirBerimbau({ medios })
+  const { grupo, grupoCabaza } = construirBerimbau()
   escena.add(grupo)
 
-  // Brasa adentro de la cabaca: entrar tiene que sentirse tibio.
-  // La luz entra por la boca, como en una vasija de verdad: el fondo queda mas
-  // oscuro que el borde. Puesta adentro se veia el punto caliente sobre la malla.
-  const brasaInterior = new PointLight(PALETA.acento, 2.6, 9, 2)
-  brasaInterior.position.set(0, 0.25, 0.15)
+  // Luz calida adentro de la cabaca, entrando por la boca: el fondo queda mas
+  // oscuro que el borde, como en una vasija de verdad.
+  const brasaInterior = new PointLight(PALETA.calido, 2.4, 6.5, 2)
+  brasaInterior.position.set(0, 0.15, 0.35)
   grupoCabaza.add(brasaInterior)
 
-  const brasas = construirBrasas(reducirMovimiento ? 70 : 130)
-  escena.add(brasas)
-
-  // Fotos reales cuando existan; si no, se queda el marco vacio.
-  const cargador = new TextureLoader()
-  const texturasCargadas = []
-  const fotos = (medios && medios.fotos) || []
-  fotos.forEach((foto, indice) => {
-    if (!foto || !foto.src || !marcos[indice]) return
-    cargador.load(
-      foto.src,
-      (textura) => {
-        textura.colorSpace = SRGBColorSpace
-        texturasCargadas.push(textura)
-        ponerFoto(marcos[indice], textura)
-      },
-      undefined,
-      () => {},
-    )
-  })
-
-  // Anclas de video en coordenadas de mundo, para la capa HTML.
-  const anclasMundo = new Map()
-  grupo.updateMatrixWorld(true)
-  for (const ancla of anclas) {
-    anclasMundo.set(ancla.id, ancla.grupo.localToWorld(ancla.local.clone()))
-  }
-  const elementosAncla = new Map()
+  const motas = construirMotas(reducirMovimiento ? 60 : 120)
+  escena.add(motas)
 
   // ------------------------------------------------------------------- camara
-  const curvaPosicion = new CatmullRomCurve3(puntos(CAMARA), false, 'centripetal', 0.5)
-  const curvaObjetivo = new CatmullRomCurve3(objetivos(CAMARA), false, 'centripetal', 0.5)
+  const curvaPosicion = new CatmullRomCurve3(CAMARA.map((p) => new Vector3(...p.posicion)), false, 'centripetal', 0.5)
+  const curvaObjetivo = new CatmullRomCurve3(CAMARA.map((p) => new Vector3(...p.objetivo)), false, 'centripetal', 0.5)
   const ultimaParada = CAMARA.length - 1
 
   let indiceActual = limitar(paradaInicial, 0, ultimaParada)
@@ -149,35 +120,11 @@ export function crearEscena(opciones) {
   let progreso = 1
   let duracion = 1
   let fovActual = fovDesde
+  let angosto = false
 
   const posicionBase = new Vector3()
   const objetivoBase = new Vector3()
   const vaiven = new Vector3()
-  const proyectado = new Vector3()
-
-  // El panel de texto tapa parte de la pantalla: abajo en vertical, a la
-  // izquierda en horizontal. Corremos el encuadre para que el instrumento no
-  // quede debajo del panel. Se mueve la camara, no el objetivo: la perspectiva
-  // no se deforma.
-  function aplicarEncuadre() {
-    const distancia = camara.position.distanceTo(objetivoBase)
-    // El umbral es el mismo 800px del CSS: con el panel a un lado se corre el
-    // encuadre en horizontal; con el panel abajo, en vertical.
-    if (lienzo.clientWidth >= 800) {
-      camara.translateX(-0.2 * distancia)
-      return
-    }
-    // En vertical el panel tapa la mitad de abajo, asi que el berimbau tiene que
-    // caber en la mitad de arriba. Correr la camara sin mas lo deja sin cabeza:
-    // primero se retrocede para ganar el alto que el corrimiento va a gastar.
-    // Adentro de la cabaca no hay para donde retroceder, y ahi no hace falta.
-    const retroceso = distancia > 3 ? 0.95 * distancia : 0
-    if (retroceso > 0) camara.translateZ(retroceso)
-    // El corrimiento se mide contra el ALTO VISIBLE, no contra la distancia:
-    // asi el sujeto cae siempre a un cuarto de la pantalla, con cualquier fov.
-    const altoVisible = 2 * (distancia + retroceso) * Math.tan((camara.fov * Math.PI) / 360)
-    camara.translateY(-0.25 * altoVisible)
-  }
 
   // Entrada: un unico acercamiento al cargar. Con prefers-reduced-motion no corre.
   let entrada = reducirMovimiento ? 0 : 1
@@ -191,6 +138,18 @@ export function crearEscena(opciones) {
     if (entrada > 0) {
       const alejar = 1 + 0.42 * suavizar(entrada)
       posicionBase.sub(objetivoBase).multiplyScalar(alejar).add(objetivoBase)
+    }
+
+    // En vertical el panel se come la mitad de abajo, asi que el instrumento
+    // tiene que caber en la mitad de arriba: se retrocede para ganar el alto
+    // que el corrimiento de encuadre va a gastar. Adentro de la cabaca no hay
+    // para donde retroceder y tampoco hace falta, asi que el retroceso se apaga
+    // solo cuando el sujeto esta cerca (y lo hace de forma continua, para no
+    // dar un salto a mitad de una transicion).
+    if (angosto) {
+      const distancia = posicionBase.distanceTo(objetivoBase)
+      const mezcla = transicionSuave(distancia, 2.5, 5)
+      if (mezcla > 0) posicionBase.sub(objetivoBase).multiplyScalar(1 + 0.85 * mezcla).add(objetivoBase)
     }
 
     const fov = fovDesde + (fovHasta - fovDesde) * t
@@ -209,7 +168,6 @@ export function crearEscena(opciones) {
 
     camara.position.copy(posicionBase).add(vaiven)
     camara.lookAt(objetivoBase)
-    aplicarEncuadre()
   }
 
   function irA(indice, inmediato = false) {
@@ -233,50 +191,17 @@ export function crearEscena(opciones) {
     return indiceActual
   }
 
-  // -------------------------------------------------------------- capa de HTML
-  function registrarAncla(id, elemento) {
-    if (elemento) elementosAncla.set(id, elemento)
-    else elementosAncla.delete(id)
-  }
-
-  function actualizarAnclas() {
-    if (elementosAncla.size === 0) return
-    const visiblesAqui = PARADAS_CON_MEDIOS.includes(indiceActual)
-    const ancho = lienzo.clientWidth
-    const alto = lienzo.clientHeight
-
-    for (const [id, elemento] of elementosAncla) {
-      const punto = anclasMundo.get(id)
-      if (!punto) continue
-      if (!visiblesAqui) {
-        elemento.style.visibility = 'hidden'
-        elemento.style.opacity = '0'
-        continue
-      }
-      proyectado.copy(punto).project(camara)
-      // Margen apretado: la tarjeta se centra en el ancla, asi que un ancla
-      // pegada al borde deja media tarjeta colgando fuera de la pantalla.
-      const dentro = proyectado.z < 1 && Math.abs(proyectado.x) < 0.86 && Math.abs(proyectado.y) < 0.86
-      if (!dentro) {
-        elemento.style.visibility = 'hidden'
-        elemento.style.opacity = '0'
-        continue
-      }
-      const x = (proyectado.x * 0.5 + 0.5) * ancho
-      const y = (-proyectado.y * 0.5 + 0.5) * alto
-      const distancia = camara.position.distanceTo(punto)
-      const escala = limitar(1.9 / Math.max(distancia, 0.4), 0.55, 1.35)
-      elemento.style.visibility = 'visible'
-      elemento.style.opacity = '1'
-      elemento.style.transform = `translate(-50%, -50%) translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) scale(${escala.toFixed(3)})`
-    }
-  }
-
   // ------------------------------------------------------------------ tamanos
   function redimensionar() {
     const ancho = Math.max(contenedor.clientWidth || window.innerWidth, 1)
     const alto = Math.max(contenedor.clientHeight || window.innerHeight, 1)
+    angosto = ancho < ANCHO_ANGOSTO
     camara.aspect = ancho / alto
+    // El panel de texto tapa parte de la pantalla: a la izquierda en ancho,
+    // abajo en angosto. Se corre la PROYECCION, no la camara: asi el encuadre
+    // se acomoda sin tocar el punto de vista ni sacar la camara de la cabaca.
+    if (angosto) camara.setViewOffset(ancho, alto, 0, alto * 0.25, ancho, alto)
+    else camara.setViewOffset(ancho, alto, -ancho * 0.15, 0, ancho, alto)
     camara.updateProjectionMatrix()
     renderizador.setSize(ancho, alto, false)
   }
@@ -298,6 +223,8 @@ export function crearEscena(opciones) {
 
   // ------------------------------------------------------------ contexto y fps
   let vivo = true
+  let pausado = false
+
   function alPerderContexto(evento) {
     evento.preventDefault()
     vivo = false
@@ -336,7 +263,7 @@ export function crearEscena(opciones) {
       ventanasLentas = 0
       pixelRatio = MIN_PIXEL_RATIO
       renderizador.setPixelRatio(pixelRatio)
-      brasas.visible = false
+      motas.visible = false
       redimensionar()
       alDegradar()
       return
@@ -357,16 +284,20 @@ export function crearEscena(opciones) {
     raf = requestAnimationFrame(bucle)
     const dt = Math.min((ahora - anterior) / 1000, 0.06)
     anterior = ahora
-    reloj += dt
 
+    // Pausado: el canvas esta tapado por otra capa. Se deja el rAF vivo para
+    // volver sin tiron, pero no se dibuja: dibujar debajo de un video que corre
+    // es justo lo que tumba los cuadros en gama media.
+    if (pausado) return
+
+    reloj += dt
     if (entrada > 0) entrada = Math.max(entrada - dt / 2.4, 0)
     if (progreso < 1) progreso = Math.min(progreso + dt / duracion, 1)
-    if (!reducirMovimiento && brasas.visible) animarBrasas(brasas, dt)
-    if (!reducirMovimiento) grupo.rotation.y = Math.sin(reloj * 0.11) * 0.035
+    if (!reducirMovimiento && motas.visible) animarMotas(motas, dt)
+    if (!reducirMovimiento) grupo.rotation.y = Math.sin(reloj * 0.11) * 0.03
 
     ubicarCamara(reloj)
     renderizador.render(escena, camara)
-    actualizarAnclas()
     vigilarRendimiento(dt)
   }
 
@@ -392,7 +323,6 @@ export function crearEscena(opciones) {
         material.dispose()
       }
     })
-    for (const textura of texturasCargadas) textura.dispose()
 
     renderizador.dispose()
     if (typeof renderizador.forceContextLoss === 'function') renderizador.forceContextLoss()
@@ -401,12 +331,12 @@ export function crearEscena(opciones) {
 
   return {
     irA,
-    registrarAncla,
     destruir,
+    pausar(valor) {
+      pausado = Boolean(valor)
+      if (!pausado) anterior = performance.now()
+    },
     parada: () => indiceActual,
-    // Enganche de audio: cuando existan los toques, este es el punto donde la
-    // escena avisa que cambio la parada. Hoy no suena nada a proposito: el
-    // navegador bloquea el autoplay sin gesto del visitante.
     radioCabaza: CABAZA.radio,
   }
 }

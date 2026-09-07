@@ -1,6 +1,11 @@
 // El berimbau modelado por codigo. Nada de modelos descargados.
-// Presupuesto: menos de 2.500 triangulos y ocho llamadas de dibujo, para que
-// un Mali-G78 sostenga los 30 cuadros sin sombras ni post-proceso.
+// Presupuesto: menos de 2.500 triangulos y una docena de llamadas de dibujo,
+// para que un Mali-G78 sostenga los 30 cuadros sin sombras ni post-proceso.
+//
+// Lo que tiene que leerse de un vistazo, en este orden:
+//   1. el arame TENSO de punta a punta, que dobla la verga;
+//   2. el triangulo largo y estrecho entre madera y cuerda;
+//   3. la cabaca ATADA abajo, cortada y con la boca al frente.
 
 import {
   AdditiveBlending,
@@ -10,64 +15,41 @@ import {
   CylinderGeometry,
   Float32BufferAttribute,
   Group,
-  LineBasicMaterial,
-  LineLoop,
-  Matrix4,
   Mesh,
-  MeshBasicMaterial,
   MeshLambertMaterial,
   MeshPhongMaterial,
-  PlaneGeometry,
   Points,
   PointsMaterial,
   QuadraticBezierCurve3,
+  RepeatWrapping,
   SRGBColorSpace,
   SphereGeometry,
   TorusGeometry,
   Vector3,
 } from 'three'
 
-import {
-  ANCLAS_VIDEO,
-  ARAME,
-  BAQUETA,
-  CABAZA,
-  DOBRAO,
-  MARCOS_FOTO,
-  MARCO_TAMANO,
-  PLACA,
-  RODA,
-  VERGA,
-  direccionCabaza,
-} from './paradas.js'
+import { ARAME, BAQUETA, CABAZA, CORDINHA, DOBRAO, VERGA } from './paradas.js'
 
+// Paleta de Guatoc. La madera conserva tono de madera real, pero apagada y
+// calida para que conviva con el verde en vez de pelearse con el.
 export const PALETA = {
-  fondo: 0x16100a,
-  madera: 0x7a4a22,
-  maderaClara: 0xc79a5e,
-  cabazaFuera: 0xb07a35,
-  cabazaDentro: 0xe0b877,
-  arame: 0xcfc7b6,
-  oro: 0xedba4e,
-  acento: 0xf28c1e,
-  crema: 0xf8efdf,
-  verde: 0xa3bc5a,
-  linea: 0x3e2f1c,
+  fondo: 0x07100b,
+  ink: 0xf0f6f1,
+  inkSoft: 0xc3d5c8,
+  acento: 0x58e39a,
+  acentoDim: 0x2e9463,
+  calido: 0xe6b450,
+  madera: 0x8a6236,
+  maderaClara: 0xc9a978,
+  cabazaFuera: 0xb98f4e,
+  cabazaDentro: 0x7d5a2c,
+  corte: 0xd9c39a,
 }
 
 const TAU = Math.PI * 2
 
 function v3(lista) {
   return new Vector3(lista[0], lista[1], lista[2])
-}
-
-const ARRIBA = new Vector3(0, 1, 0)
-const ORIGEN = new Vector3(0, 0, 0)
-
-// Gira el objeto para que su cara (+Z) mire al centro de la cabaca.
-function mirarAlCentro(objeto) {
-  const matriz = new Matrix4().lookAt(ORIGEN, objeto.position, ARRIBA)
-  objeto.quaternion.setFromRotationMatrix(matriz)
 }
 
 // ---------------------------------------------------------------- utilidades
@@ -85,70 +67,40 @@ function lienzo2d(ancho, alto, dibujar) {
   return textura
 }
 
-function recortar(ctx, texto, maximo) {
-  let salida = texto
-  while (salida.length > 3 && ctx.measureText(salida).width > maximo) {
-    salida = salida.slice(0, -1)
-  }
-  return salida === texto ? texto : `${salida.trim()}…`
-}
-
-// Marco vacio: lo que se ve mientras no llegue la foto de Guatoc.
-function texturaMarcoPendiente(indice, titulo, etiqueta) {
-  return lienzo2d(320, 224, (ctx, w, h) => {
-    ctx.fillStyle = '#2e2214'
+// El interior de una calabaza cortada esta raspado: anillos concentricos.
+// En una esfera la V corre del borde al polo, asi que unas bandas horizontales
+// se leen como anillos alrededor del fondo.
+function texturaRaspado() {
+  const textura = lienzo2d(64, 256, (ctx, w, h) => {
+    ctx.fillStyle = '#a67f4c'
     ctx.fillRect(0, 0, w, h)
-    ctx.strokeStyle = '#f28c1e'
-    ctx.lineWidth = 4
-    ctx.setLineDash([13, 11])
-    ctx.strokeRect(11, 11, w - 22, h - 22)
-    ctx.setLineDash([])
-
-    ctx.fillStyle = '#f28c1e'
-    ctx.font = 'bold 26px Arial, Helvetica, sans-serif'
-    ctx.textAlign = 'left'
-    ctx.textBaseline = 'top'
-    ctx.fillText(String(indice + 1).padStart(2, '0'), 26, 26)
-
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillStyle = '#f8efdf'
-    ctx.font = 'bold 34px "Arial Narrow", Arial, sans-serif'
-    ctx.fillText(recortar(ctx, titulo.toUpperCase(), w - 60), w / 2, h / 2 - 4)
-
-    ctx.fillStyle = '#c3ae91'
-    ctx.font = '19px Arial, Helvetica, sans-serif'
-    ctx.fillText(recortar(ctx, etiqueta, w - 60), w / 2, h / 2 + 34)
-  })
-}
-
-function texturaPlaca(linea1, linea2) {
-  return lienzo2d(512, 240, (ctx, w, h) => {
-    ctx.fillStyle = '#241a10'
+    // Rayas finas y de poco contraste: marcadas se leen como anillos de tronco
+    // y la cabaca pasa a parecer una rodaja de palo.
+    for (let i = 0; i < 90; i += 1) {
+      const y = (i / 90) * h + Math.sin(i * 2.7) * 1.5
+      ctx.fillStyle = Math.sin(i * 1.9) > 0 ? 'rgba(255,232,192,0.05)' : 'rgba(70,46,20,0.07)'
+      ctx.fillRect(0, y, w, 1)
+    }
+    // El fondo del cuenco queda mas oscuro que el borde: es lo que hace que se
+    // lea como cavidad y no como disco.
+    const grad = ctx.createLinearGradient(0, 0, 0, h)
+    grad.addColorStop(0, 'rgba(0,0,0,0)')
+    grad.addColorStop(1, 'rgba(24,14,4,0.62)')
+    ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
-    ctx.strokeStyle = '#edba4e'
-    ctx.lineWidth = 5
-    ctx.strokeRect(14, 14, w - 28, h - 28)
-
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.fillStyle = '#f28c1e'
-    ctx.font = 'bold 92px "Arial Narrow", Arial, sans-serif'
-    ctx.fillText(recortar(ctx, linea1, w - 70), w / 2, h / 2 - 18)
-
-    ctx.fillStyle = '#c3ae91'
-    ctx.font = 'bold 30px Arial, Helvetica, sans-serif'
-    ctx.fillText(recortar(ctx, linea2.toUpperCase(), w - 70), w / 2, h / 2 + 62)
   })
+  textura.wrapS = RepeatWrapping
+  textura.repeat.set(2, 1)
+  return textura
 }
 
-function texturaBrasa() {
+function texturaMota(color) {
   return lienzo2d(32, 32, (ctx, w) => {
     const r = w / 2
     const grad = ctx.createRadialGradient(r, r, 0, r, r, r)
-    grad.addColorStop(0, 'rgba(255, 220, 160, 1)')
-    grad.addColorStop(0.4, 'rgba(242, 140, 30, 0.65)')
-    grad.addColorStop(1, 'rgba(242, 140, 30, 0)')
+    grad.addColorStop(0, 'rgba(255,255,255,1)')
+    grad.addColorStop(0.35, color)
+    grad.addColorStop(1, 'rgba(0,0,0,0)')
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, w)
   })
@@ -199,9 +151,9 @@ function tuboAhusado(curva, segmentos, lados, radioEn) {
   return geometria
 }
 
-// Media esfera abollada: una calabaza seca no es un balon partido.
+// Cuenco abollado: una calabaza seca no es un balon partido.
 function geometriaCabaza(radio, fondo) {
-  const geometria = new SphereGeometry(radio, 26, 13, 0, TAU, 0, Math.PI / 2)
+  const geometria = new SphereGeometry(radio, 24, 12, 0, TAU, 0, Math.PI / 2)
   const posicion = geometria.attributes.position
   const punto = new Vector3()
   for (let i = 0; i < posicion.count; i += 1) {
@@ -211,149 +163,130 @@ function geometriaCabaza(radio, fondo) {
     // El bulto se apaga en la boca Y en el polo: sobre el polo convergen todos
     // los triangulos y cualquier deformacion ahi se ve como un abanico de rayas.
     const peso = Math.sin(altura * Math.PI)
-    const bulto = 1 + peso * (0.055 * Math.sin(azimut * 3) + 0.04 * Math.cos(azimut * 2 + 1.1) - 0.02)
+    const bulto = 1 + peso * (0.06 * Math.sin(azimut * 3) + 0.04 * Math.cos(azimut * 2 + 1.1) - 0.02)
     punto.multiplyScalar(bulto)
     punto.y *= fondo
     posicion.setXYZ(i, punto.x, punto.y, punto.z)
   }
   geometria.computeVertexNormals()
-  // Boca hacia +Z: la camara entra de frente.
+  // Boca hacia +Z: el visitante entra de frente.
   geometria.rotateX(-Math.PI / 2)
   return geometria
 }
 
-function anilloRoda(radio, y, color, opacidad) {
-  const puntos = []
-  for (let i = 0; i < 72; i += 1) {
-    const a = (i / 72) * TAU
-    puntos.push(Math.cos(a) * radio, y, Math.sin(a) * radio)
-  }
-  const geometria = new BufferGeometry()
-  geometria.setAttribute('position', new Float32BufferAttribute(puntos, 3))
-  const material = new LineBasicMaterial({ color, transparent: true, opacity: opacidad })
-  return new LineLoop(geometria, material)
+// Cilindro entre dos puntos, para los cordeles cortos.
+function barra(desde, hasta, radio, material, lados = 5) {
+  const largo = desde.distanceTo(hasta)
+  const malla = new Mesh(new CylinderGeometry(radio, radio, largo, lados, 1, true), material)
+  malla.position.copy(desde).add(hasta).multiplyScalar(0.5)
+  malla.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), hasta.clone().sub(desde).normalize())
+  return malla
 }
 
 // -------------------------------------------------------------- construccion
 
-export function construirBerimbau({ medios }) {
+export function construirBerimbau() {
   const grupo = new Group()
   grupo.name = 'berimbau'
 
-  const curvaVerga = new QuadraticBezierCurve3(v3(VERGA.pieBase), v3(VERGA.control), v3(VERGA.punta))
+  const pie = v3(VERGA.pieBase)
+  const punta = v3(VERGA.punta)
+  const curvaVerga = new QuadraticBezierCurve3(pie, v3(VERGA.control), punta)
+
+  const matMadera = new MeshPhongMaterial({ color: PALETA.madera, shininess: 18, specular: 0x2a2214 })
+  const matCordel = new MeshLambertMaterial({ color: PALETA.acento })
+  const matMetal = new MeshPhongMaterial({ color: PALETA.calido, shininess: 110, specular: 0xa08850 })
 
   // Verga: el arco de madera. Gruesa en el pie, esbelta en la punta.
   const geoVerga = tuboAhusado(curvaVerga, 44, 8, (t) => VERGA.radioPie + (VERGA.radioPunta - VERGA.radioPie) * t)
-  const matMadera = new MeshPhongMaterial({ color: PALETA.madera, shininess: 20, specular: 0x2a1a0c, flatShading: false })
   grupo.add(new Mesh(geoVerga, matMadera))
 
-  // Arame: la cuerda de acero, tensa entre las dos puntas.
-  const pie = v3(VERGA.pieBase)
-  const punta = v3(VERGA.punta)
-  const largoArame = pie.distanceTo(punta)
-  const geoArame = new CylinderGeometry(ARAME.radio, ARAME.radio, largoArame, 6, 1, true)
-  const matArame = new MeshPhongMaterial({ color: PALETA.arame, shininess: 90, specular: 0x9a9384 })
-  const arame = new Mesh(geoArame, matArame)
-  arame.position.copy(pie).add(punta).multiplyScalar(0.5)
+  // Arame: la cuerda de acero, TENSA y recta entre las dos puntas. Es la que
+  // dobla la verga; sin ella el arco parece una cana de pescar.
+  const arame = barra(pie, punta, ARAME.radio, matMetal, 6)
   grupo.add(arame)
 
-  // Cabezales de cuerda en las dos puntas.
-  const geoNudo = new TorusGeometry(0.13, 0.045, 5, 10)
-  const matCordel = new MeshLambertMaterial({ color: PALETA.verde })
+  // Amarres de las puntas: ahi es donde el arame tira de la madera.
+  const geoAmarrePunta = new TorusGeometry(0.15, 0.05, 5, 12)
   for (const extremo of [pie, punta]) {
-    const nudo = new Mesh(geoNudo, matCordel)
-    nudo.position.copy(extremo).setY(extremo.y + (extremo.y < 0 ? 0.35 : -0.35))
+    const nudo = new Mesh(geoAmarrePunta, matCordel)
+    nudo.position.copy(extremo)
+    nudo.position.y += extremo.y < 0 ? 0.42 : -0.42
     nudo.rotation.x = Math.PI / 2
     grupo.add(nudo)
   }
 
-  // Cabaca: la caja de resonancia. Es adonde entra el visitante.
+  // Cabaca: la caja de resonancia, adonde entra el visitante.
   const grupoCabaza = new Group()
   grupoCabaza.name = 'cabaza'
   grupoCabaza.position.copy(v3(CABAZA.centro))
   grupo.add(grupoCabaza)
 
   const geoCabaza = geometriaCabaza(CABAZA.radio, CABAZA.fondo)
-  const matCabazaFuera = new MeshPhongMaterial({ color: PALETA.cabazaFuera, shininess: 16, specular: 0x241708 })
-  const matCabazaDentro = new MeshPhongMaterial({
-    // Mas oscuro que el exterior: adentro de una vasija entra poca luz, y si el
-    // interior se blanquea el sitio deja de ser el sitio (fondo #16100a).
-    color: 0x9c6a30,
-    shininess: 4,
-    specular: 0x120a04,
-    emissive: 0x1c0e04,
-    side: BackSide,
-  })
-  grupoCabaza.add(new Mesh(geoCabaza, matCabazaFuera))
-  grupoCabaza.add(new Mesh(geoCabaza, matCabazaDentro))
+  const texturaDentro = texturaRaspado()
+  grupoCabaza.add(new Mesh(geoCabaza, new MeshPhongMaterial({ color: PALETA.cabazaFuera, shininess: 14, specular: 0x241d0e })))
+  grupoCabaza.add(
+    new Mesh(
+      geoCabaza,
+      new MeshPhongMaterial({
+        color: PALETA.cabazaDentro,
+        map: texturaDentro,
+        shininess: 4,
+        specular: 0x0f0a04,
+        emissive: 0x1a1006,
+        side: BackSide,
+      }),
+    ),
+  )
 
-  // Borde de la boca: el corte de la calabaza. Grueso a proposito: es lo que
-  // hace que se lea como una vasija abierta y no como una bola.
-  const geoBorde = new TorusGeometry(CABAZA.radio * 0.99, 0.075, 6, 34)
-  const borde = new Mesh(geoBorde, new MeshPhongMaterial({ color: 0x6d4318, shininess: 6 }))
+  // El CORTE de la boca: grueso y PALIDO. La pulpa recien cortada es lo mas
+  // claro de la calabaza, y ese anillo claro alrededor de un hueco oscuro es
+  // justo lo que separa una vasija abierta de una bola.
+  const borde = new Mesh(
+    new TorusGeometry(CABAZA.radio * 0.985, 0.08, 6, 32),
+    new MeshPhongMaterial({ color: PALETA.corte, shininess: 12, specular: 0x40331c }),
+  )
   grupoCabaza.add(borde)
 
-  // Cordinha: amarra la cabaca al arame y a la verga. Trae el verde del sitio.
-  // Amarra la cabaca contra la verga y el arame, por el fondo cerrado.
-  const geoAmarre = new TorusGeometry(0.48, 0.035, 5, 18)
-  const amarre = new Mesh(geoAmarre, matCordel)
-  amarre.position.set(0.08, 0, -CABAZA.radio * CABAZA.fondo - 0.62)
-  amarre.rotation.x = Math.PI / 2
-  grupoCabaza.add(amarre)
-
-  // Marcos de foto sobre la pared interna. Vacios hasta que lleguen las de Guatoc.
-  const fotos = (medios && medios.fotos) || []
-  const etiquetaFoto = (medios && medios.pendienteFoto) || 'Foto pendiente'
-  const marcos = []
-  const geoMarco = new PlaneGeometry(MARCO_TAMANO.ancho, MARCO_TAMANO.alto)
-  const geoMarcoBorde = new PlaneGeometry(MARCO_TAMANO.ancho + 0.07, MARCO_TAMANO.alto + 0.07)
-  const matMarcoBorde = new MeshBasicMaterial({ color: PALETA.acento, transparent: true, opacity: 0.55 })
-
-  MARCOS_FOTO.forEach((sitio, indice) => {
-    const ficha = fotos[indice] || { titulo: `Foto ${indice + 1}` }
-    const direccion = direccionCabaza(sitio.azimut, sitio.elevacion)
-    const posicion = new Vector3(direccion[0], direccion[1], direccion[2]).multiplyScalar(MARCO_TAMANO.radio)
-
-    const marco = new Group()
-    marco.position.copy(posicion)
-    mirarAlCentro(marco)
-    marco.userData.idFoto = ficha.id || `foto-${indice + 1}`
-
-    const fondo = new Mesh(geoMarcoBorde, matMarcoBorde)
-    fondo.position.z = -0.012
-    marco.add(fondo)
-
-    const textura = texturaMarcoPendiente(indice, ficha.titulo || `Foto ${indice + 1}`, etiquetaFoto)
-    const lamina = new Mesh(geoMarco, new MeshBasicMaterial({ map: textura, toneMapped: false }))
-    marco.add(lamina)
-    marco.userData.lamina = lamina
-
-    grupoCabaza.add(marco)
-    marcos.push(marco)
-  })
-
-  // Placa grabada al fondo: donde cae la parada de reserva.
-  const direccionPlaca = direccionCabaza(PLACA.azimut, PLACA.elevacion)
-  const placa = new Mesh(
-    new PlaneGeometry(PLACA.ancho, PLACA.alto),
-    new MeshBasicMaterial({ map: texturaPlaca(medios?.placa?.valor || '$100.000', medios?.placa?.pie || 'Reserva'), toneMapped: false }),
+  // Cuello: el rabo de la calabaza, en el fondo cerrado. Cuesta 100 triangulos
+  // y es lo que la vuelve calabaza y no esfera.
+  const cuello = new Mesh(
+    new SphereGeometry(0.15, 8, 6),
+    new MeshPhongMaterial({ color: PALETA.corte, shininess: 6 }),
   )
-  placa.position.set(direccionPlaca[0], direccionPlaca[1], direccionPlaca[2]).multiplyScalar(PLACA.radio)
-  mirarAlCentro(placa)
-  grupoCabaza.add(placa)
+  // Bien atras: si el cuello asoma por dentro del cuenco se ve como un bulto
+  // pegado en la pared del fondo.
+  cuello.position.set(0, 0, -CABAZA.radio * CABAZA.fondo - 0.3)
+  cuello.scale.set(0.9, 0.9, 1.4)
+  grupoCabaza.add(cuello)
 
-  // Anclas invisibles para la capa HTML de video.
-  const anclas = ANCLAS_VIDEO.map((sitio, indice) => {
-    const direccion = direccionCabaza(sitio.azimut, sitio.elevacion)
-    const local = new Vector3(direccion[0], direccion[1], direccion[2]).multiplyScalar(sitio.radio)
-    const video = (medios && medios.videos && medios.videos[indice]) || {}
-    return { id: video.id || `video-${indice + 1}`, local, grupo: grupoCabaza }
-  })
+  // Cordinha: el lazo que amarra la cabaca a la verga y al arame. Verde del
+  // sitio, para que la atadura se vea.
+  const xVerga = curvaVerga.getPoint((CORDINHA.y + 8) / 16).x
+  const lazo = new Mesh(new TorusGeometry(CORDINHA.radio, CORDINHA.tubo, 5, 18), matCordel)
+  lazo.position.set(xVerga, CORDINHA.y, 0)
+  lazo.rotation.x = Math.PI / 2
+  grupo.add(lazo)
+
+  // Dos cabos que bajan del lazo y se meten detras del cuenco. Se ven salir de
+  // la verga y desaparecer tras el filo: eso es lo que cuenta que esta atada.
+  const zFondo = CABAZA.centro[2] - CABAZA.radio * CABAZA.fondo
+  for (const lado of [-1, 1]) {
+    grupo.add(
+      barra(
+        new Vector3(xVerga + lado * 0.16, CORDINHA.y - 0.05, 0.18),
+        new Vector3(CABAZA.centro[0] + lado * 0.3, CABAZA.centro[1] + 0.55, zFondo),
+        0.032,
+        matCordel,
+        4,
+      ),
+    )
+  }
 
   // Dobrao: la moneda que aprieta el arame.
   const dobrao = new Mesh(
-    new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 18),
-    new MeshPhongMaterial({ color: PALETA.oro, shininess: 70, specular: 0x6b5a24 }),
+    new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 16),
+    new MeshPhongMaterial({ color: PALETA.calido, shininess: 60, specular: 0x6b5a24 }),
   )
   dobrao.position.set(DOBRAO.posicion[0], DOBRAO.posicion[1], DOBRAO.posicion[2])
   dobrao.rotation.x = Math.PI / 2
@@ -362,7 +295,7 @@ export function construirBerimbau({ medios }) {
 
   // Baqueta: la varita que golpea el arame.
   const baqueta = new Mesh(
-    new CylinderGeometry(BAQUETA.radio, BAQUETA.radio * 0.8, BAQUETA.largo, 6),
+    new CylinderGeometry(BAQUETA.radio, BAQUETA.radio * 0.78, BAQUETA.largo, 6),
     new MeshLambertMaterial({ color: PALETA.maderaClara }),
   )
   baqueta.position.set(BAQUETA.posicion[0], BAQUETA.posicion[1], BAQUETA.posicion[2])
@@ -370,37 +303,32 @@ export function construirBerimbau({ medios }) {
   baqueta.rotation.y = 0.22
   grupo.add(baqueta)
 
-  // Roda: dos anillos en el piso. Dan escala y contexto sin costar nada.
-  const roda = new Group()
-  roda.add(anilloRoda(RODA.radios[0], RODA.y, PALETA.acento, 0.32))
-  roda.add(anilloRoda(RODA.radios[1], RODA.y, PALETA.oro, 0.16))
-  grupo.add(roda)
-
-  return { grupo, grupoCabaza, marcos, anclas, curvaVerga }
+  return { grupo, grupoCabaza }
 }
 
-// Brasas: puntos que suben despacio. Dan vida al vacio sin poligonos.
-export function construirBrasas(cantidad = 130) {
+// Motas de luz que suben despacio: el monte de Guatoc de noche. Puntos, no
+// poligonos.
+export function construirMotas(cantidad = 120) {
   const posiciones = new Float32Array(cantidad * 3)
   const velocidades = new Float32Array(cantidad)
   for (let i = 0; i < cantidad; i += 1) {
     const angulo = Math.random() * TAU
-    const radio = 2 + Math.random() * 7
+    const radio = 2.5 + Math.random() * 7.5
     posiciones[i * 3] = Math.cos(angulo) * radio
     posiciones[i * 3 + 1] = -9 + Math.random() * 18
     posiciones[i * 3 + 2] = Math.sin(angulo) * radio - 1
-    velocidades[i] = 0.25 + Math.random() * 0.65
+    velocidades[i] = 0.18 + Math.random() * 0.5
   }
 
   const geometria = new BufferGeometry()
   geometria.setAttribute('position', new Float32BufferAttribute(posiciones, 3))
 
   const material = new PointsMaterial({
-    size: 0.22,
-    map: texturaBrasa(),
+    size: 0.2,
+    map: texturaMota('rgba(88,227,154,0.85)'),
     color: PALETA.acento,
     transparent: true,
-    opacity: 0.7,
+    opacity: 0.55,
     depthWrite: false,
     blending: AdditiveBlending,
     sizeAttenuation: true,
@@ -412,7 +340,7 @@ export function construirBrasas(cantidad = 130) {
   return puntos
 }
 
-export function animarBrasas(puntos, dt) {
+export function animarMotas(puntos, dt) {
   const atributo = puntos.geometry.attributes.position
   const velocidades = puntos.userData.velocidades
   const arreglo = atributo.array
@@ -422,14 +350,4 @@ export function animarBrasas(puntos, dt) {
     if (arreglo[indiceY] > 9.5) arreglo[indiceY] = -9.5
   }
   atributo.needsUpdate = true
-}
-
-// Cambia la lamina de un marco por la foto real cuando exista.
-export function ponerFoto(marco, textura) {
-  const lamina = marco.userData.lamina
-  if (!lamina) return
-  const anterior = lamina.material.map
-  lamina.material.map = textura
-  lamina.material.needsUpdate = true
-  if (anterior) anterior.dispose()
 }

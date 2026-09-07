@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { contenido } from '../data/contenido.js'
 import { evaluarSoporte, prefiereMenosMovimiento } from '../tresd/soporte.js'
-import { PARADAS_CON_MEDIOS } from '../tresd/paradas.js'
+import { PARADA_LUGAR } from '../tresd/paradas.js'
+import FormularioReserva from './FormularioReserva.jsx'
 import '../estilos/berimbau.css'
 
 const ESPERA_CARGA = 9000 // ms: si three no llega, se cae al sitio en texto
+const CONSULTA_ANGOSTA = '(max-width: 799px)'
 
 // Cada parada tiene enlace propio: #parada-mestres abre el recorrido ahi.
 function paradaDesdeHash(paradas) {
@@ -15,18 +17,86 @@ function paradaDesdeHash(paradas) {
   return posicion >= 0 ? posicion : 0
 }
 
+// -------------------------------------------------------------- material 2D
+// Ni las fotos ni el video van pegados a la geometria del berimbau: viven en
+// las paradas del recorrido, que es donde cuentan algo.
+
+function Foto({ foto, etiqueta, className }) {
+  const [visible, setVisible] = useState(Boolean(foto.src))
+  if (visible) {
+    return (
+      <figure className={className}>
+        <img src={foto.src} alt={foto.alt} loading="lazy" onError={() => setVisible(false)} />
+        <figcaption>{foto.titulo}</figcaption>
+      </figure>
+    )
+  }
+  return (
+    <figure className={`${className} ${className}--vacia`}>
+      <span className="berimbau__marca-vacia" aria-hidden="true">◎</span>
+      <figcaption>
+        {foto.titulo} · <span className="berimbau__pendiente">{etiqueta}</span>
+      </figcaption>
+    </figure>
+  )
+}
+
+// El clip de la cascada. Sin audio de origen, en bucle y arrancado a mano:
+// con preload="none" nada se baja hasta que el visitante llega a esta parada.
+// Con prefers-reduced-motion o si el video no puede correr, queda el cuadro
+// fijo, que es el mismo encuadre: el cambio no mueve la composicion.
+function MediaLugar({ video, reducirMovimiento }) {
+  const [fallo, setFallo] = useState(false)
+  const videoRef = useRef(null)
+  const mostrarVideo = Boolean(video.src) && !reducirMovimiento && !fallo
+
+  useEffect(() => {
+    if (!mostrarVideo) return undefined
+    const elemento = videoRef.current
+    if (!elemento) return undefined
+    const intento = elemento.play()
+    if (intento && typeof intento.catch === 'function') intento.catch(() => setFallo(true))
+    return () => elemento.pause()
+  }, [mostrarVideo])
+
+  if (mostrarVideo) {
+    return (
+      <video
+        ref={videoRef}
+        className="berimbau__lugar-media"
+        src={video.src}
+        poster={video.poster || undefined}
+        aria-label={video.alt}
+        muted
+        loop
+        playsInline
+        preload="none"
+        onError={() => setFallo(true)}
+      />
+    )
+  }
+  if (video.poster) {
+    return <img className="berimbau__lugar-media" src={video.poster} alt={video.alt} />
+  }
+  return null
+}
+
 // -------------------------------------------------------------- paneles HTML
 // Todo el texto de cada parada existe como HTML de verdad. En el canvas solo
-// hay materia: madera, arame, calabaza. Nada de informacion pintada.
+// hay materia: madera, arame, calabaza.
 
-function PanelEvento({ irAReserva }) {
+function PanelEvento({ irAParada }) {
   const { hero } = contenido
   return (
     <>
       <p className="berimbau__kicker">{hero.kicker}</p>
       <p className="berimbau__texto">{hero.tagline}</p>
       <p className="berimbau__cupos">{hero.cupos}</p>
-      <button type="button" className="btn btn--primario berimbau__cta" onClick={irAReserva}>
+      <button
+        type="button"
+        className="btn btn--primario berimbau__cta"
+        onClick={() => irAParada(contenido.berimbau.paradas.length - 1)}
+      >
         {hero.reservaCta}
       </button>
     </>
@@ -58,14 +128,40 @@ function PanelMestres() {
   return (
     <>
       <p className="berimbau__texto">{instructores.intro}</p>
-      <ul className="berimbau__lista">
+      <ul className="berimbau__mestres">
         {instructores.fichas.map((ficha) => (
           <li key={ficha.nombre}>
-            <span className="berimbau__lista-titulo">{ficha.nombre}</span>
-            <span className="berimbau__lista-detalle">
-              {ficha.rol} · {ficha.disciplinas.join(' + ')}
+            <Foto
+              foto={{ src: ficha.foto, alt: ficha.fotoAlt, titulo: ficha.nombre }}
+              etiqueta={instructores.fotoPendiente}
+              className="berimbau__mestre-foto"
+            />
+            <div>
+              <span className="berimbau__lista-titulo">{ficha.nombre}</span>
+              <span className="berimbau__lista-detalle">
+                {ficha.rol} · {ficha.disciplinas.join(' + ')}
+              </span>
+              <span className="berimbau__lista-texto">{ficha.descripcion}</span>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
+  )
+}
+
+function PanelTecnica() {
+  const { tecnica } = contenido
+  return (
+    <>
+      <p className="berimbau__texto">{tecnica.intro}</p>
+      <ul className="berimbau__lista">
+        {tecnica.bloques.map((bloque) => (
+          <li key={bloque.titulo}>
+            <span className="berimbau__lista-titulo">
+              <span className="berimbau__numero">{bloque.numero}</span> {bloque.titulo}
             </span>
-            <span className="berimbau__lista-texto">{ficha.descripcion}</span>
+            <span className="berimbau__lista-texto">{bloque.texto}</span>
           </li>
         ))}
       </ul>
@@ -85,15 +181,17 @@ function PanelLugar({ parada }) {
           </li>
         ))}
       </ul>
-      <p className="berimbau__nota">
-        {medios.titulo}: {medios.fotos.map((foto) => foto.titulo).join(' · ')}.{' '}
-        <span className="berimbau__pendiente">{medios.pendienteFoto}</span>
-      </p>
+      <p className="berimbau__rotulo">{medios.titulo}</p>
+      <div className="berimbau__fotos">
+        {medios.fotos.map((foto) => (
+          <Foto key={foto.id} foto={foto} etiqueta={medios.pendienteFoto} className="berimbau__foto" />
+        ))}
+      </div>
     </>
   )
 }
 
-function PanelReserva({ irAReserva }) {
+function PanelReserva() {
   const { precios } = contenido
   return (
     <>
@@ -103,53 +201,40 @@ function PanelReserva({ irAReserva }) {
         {precios.totalEtiqueta} {precios.total}
       </p>
       <p className="berimbau__cupos">{precios.cupos.texto}</p>
-      <button type="button" className="btn btn--primario berimbau__cta" onClick={irAReserva}>
-        {precios.cta}
-      </button>
+      <p className="berimbau__rotulo">{precios.earlyBird}</p>
+      <ul className="berimbau__cohortes" aria-label={precios.cohortesAria}>
+        {precios.cohortes.map((cohorte) => (
+          <li key={cohorte.nombre} data-activa={cohorte.estado === 'actual'}>
+            <span className="berimbau__lista-detalle">{cohorte.nombre}</span>
+            <strong>{cohorte.precio}</strong>
+            <span className={`badge ${cohorte.estado === 'actual' ? 'badge--activa' : 'badge--agotada'}`}>
+              {cohorte.estado === 'actual' ? precios.cohorteActual : precios.cohorteAgotada}
+            </span>
+          </li>
+        ))}
+      </ul>
+      <FormularioReserva idPrefijo="recorrido" />
     </>
   )
 }
 
-function CuerpoParada({ indice, parada, irAReserva }) {
-  if (indice === 0) return <PanelEvento irAReserva={irAReserva} />
+function CuerpoParada({ indice, parada, irAParada }) {
+  if (indice === 0) return <PanelEvento irAParada={irAParada} />
   if (indice === 1) return <PanelDias />
   if (indice === 2) return <PanelMestres />
-  if (indice === 3) return <PanelLugar parada={parada} />
-  return <PanelReserva irAReserva={irAReserva} />
-}
-
-// ------------------------------------------------------- hueco de video HTML
-// El video NO va como textura WebGL: sale caro. Se queda como capa HTML encima
-// del canvas, anclada a un punto de la cabaca.
-
-function HuecoVideo({ video, etiqueta, refAncla }) {
-  if (video.src) {
-    return (
-      <div className="berimbau__video" ref={refAncla}>
-        {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-        <video src={video.src} poster={video.poster || undefined} controls playsInline preload="none" />
-        <span className="berimbau__video-pie">{video.titulo}</span>
-      </div>
-    )
-  }
-  return (
-    <div className="berimbau__video berimbau__video--vacio" ref={refAncla}>
-      <span className="berimbau__video-marca" aria-hidden="true">▶</span>
-      <span className="berimbau__video-titulo">{video.titulo}</span>
-      <span className="berimbau__video-pie">{etiqueta}</span>
-    </div>
-  )
+  if (indice === 3) return <PanelTecnica />
+  if (indice === PARADA_LUGAR) return <PanelLugar parada={parada} />
+  return <PanelReserva />
 }
 
 // ------------------------------------------------------------------ recorrido
 
-export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
+export default function Berimbau3D({ alCaer, verTexto }) {
   const { berimbau, medios } = contenido
   const paradas = berimbau.paradas
 
   const contenedorRef = useRef(null)
   const controlRef = useRef(null)
-  const anclasRef = useRef(new Map())
   const ruedaRef = useRef(0)
   const tactoRef = useRef(null)
   const caidoRef = useRef(false)
@@ -158,9 +243,13 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
   const indiceInicialRef = useRef(indice)
   const [estado, setEstado] = useState('cargando')
   const [degradado, setDegradado] = useState(false)
+  const [angosto, setAngosto] = useState(
+    () => typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia(CONSULTA_ANGOSTA).matches,
+  )
 
   const reducirMovimiento = useMemo(() => prefiereMenosMovimiento(), [])
   const parada = paradas[indice]
+  const enLugar = indice === PARADA_LUGAR
 
   const caer = useCallback(
     (razon) => {
@@ -171,19 +260,6 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
     },
     [alCaer],
   )
-
-  // Refs estables por video: registrar el ancla no debe recrear callbacks.
-  const refsAncla = useMemo(() => {
-    const mapa = new Map()
-    for (const video of medios.videos) {
-      mapa.set(video.id, (elemento) => {
-        if (elemento) anclasRef.current.set(video.id, elemento)
-        else anclasRef.current.delete(video.id)
-        if (controlRef.current) controlRef.current.registrarAncla(video.id, elemento)
-      })
-    }
-    return mapa
-  }, [medios.videos])
 
   // Arranque: primero se mira si el equipo aguanta, y solo entonces se baja three.
   useEffect(() => {
@@ -203,7 +279,6 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
         if (!vigente || !contenedorRef.current) return
         const control = crearEscena({
           contenedor: contenedorRef.current,
-          medios,
           reducirMovimiento,
           paradaInicial: indiceInicialRef.current,
           alFallar: (razon) => caer(razon),
@@ -211,7 +286,6 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
         })
         if (!control) return
         controlRef.current = control
-        for (const [id, elemento] of anclasRef.current) control.registrarAncla(id, elemento)
         setEstado('listo')
       })
       .catch(() => {
@@ -226,7 +300,7 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
         controlRef.current = null
       }
     }
-  }, [caer, medios, reducirMovimiento])
+  }, [caer, reducirMovimiento])
 
   // Mientras el recorrido esta en pantalla, la pagina no hace scroll.
   useEffect(() => {
@@ -236,6 +310,32 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
       document.body.style.overflow = anterior
     }
   }, [])
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return undefined
+    const consulta = window.matchMedia(CONSULTA_ANGOSTA)
+    const alCambiar = (evento) => setAngosto(evento.matches)
+    consulta.addEventListener('change', alCambiar)
+    return () => consulta.removeEventListener('change', alCambiar)
+  }, [])
+
+  // En celular el clip tapa el canvas entero: dibujar debajo de un video que
+  // corre es justo lo que tumba los cuadros en gama media. Se espera a que
+  // termine el viaje para no congelar la camara a mitad de camino.
+  useEffect(() => {
+    const control = controlRef.current
+    if (!control) return undefined
+    const tapado = angosto && enLugar && Boolean(medios.videos[0] && medios.videos[0].src)
+    if (!tapado) {
+      control.pausar(false)
+      return undefined
+    }
+    const espera = window.setTimeout(() => control.pausar(true), 3000)
+    return () => {
+      window.clearTimeout(espera)
+      control.pausar(false)
+    }
+  }, [angosto, enLugar, estado, medios.videos])
 
   const irAParada = useCallback(
     (destino) => {
@@ -250,7 +350,7 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
       // archivos. Hoy no suena nada: sin gesto previo el navegador lo bloquea.
       // reproducirToque(contenido.medios.audio.toques[siguiente])
     },
-    [paradas.length],
+    [paradas],
   )
 
   // Teclado: flechas y avance/retroceso de pagina.
@@ -307,10 +407,8 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
     [indice, irAParada],
   )
 
-  const mostrarMedios = PARADAS_CON_MEDIOS.includes(indice)
-
   return (
-    <div className="berimbau" data-estado={estado}>
+    <div className="berimbau" data-estado={estado} data-parada={parada.id}>
       <div
         className="berimbau__escena"
         ref={contenedorRef}
@@ -319,11 +417,13 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
         onTouchEnd={alTocarFin}
       />
 
-      <div className="berimbau__medios" aria-hidden={!mostrarMedios}>
-        {medios.videos.map((video) => (
-          <HuecoVideo key={video.id} video={video} etiqueta={medios.pendienteVideo} refAncla={refsAncla.get(video.id)} />
-        ))}
-      </div>
+      {enLugar ? <div className="berimbau__velo" aria-hidden="true" /> : null}
+
+      {enLugar ? (
+        <div className="berimbau__lugar-marco">
+          <MediaLugar video={medios.videos[0]} reducirMovimiento={reducirMovimiento} />
+        </div>
+      ) : null}
 
       <header className="berimbau__marca">
         <p className="berimbau__marca-nombre">{berimbau.marca}</p>
@@ -353,7 +453,7 @@ export default function Berimbau3D({ alCaer, irAReserva, verTexto }) {
         <h1 className="berimbau__titulo">{parada.titulo}</h1>
         <p className="berimbau__toque-nota">{parada.toqueNota}</p>
         <p className="berimbau__entradilla">{parada.entradilla}</p>
-        <CuerpoParada indice={indice} parada={parada} irAReserva={irAReserva} />
+        <CuerpoParada indice={indice} parada={parada} irAParada={irAParada} />
         <div className="berimbau__pasos">
           <button type="button" className="berimbau__paso" onClick={() => irAParada(indice - 1)} disabled={indice === 0}>
             {berimbau.anterior}
