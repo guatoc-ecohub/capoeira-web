@@ -253,10 +253,12 @@ export function construirBerimbau() {
   }
 
   // --- la cabaca --------------------------------------------------------
+  // El torneado abre hacia +Z local; el cuaternion lleva ese +Z a la normal de
+  // la boca, asi que la boca mira hacia donde dice viaje.js.
   const cabaza = new Group()
   cabaza.name = 'cabaza'
   cabaza.position.copy(v3(CABAZA.boca))
-  cabaza.rotation.set(CABAZA.giro[0], CABAZA.giro[1], CABAZA.giro[2])
+  cabaza.quaternion.setFromUnitVectors(EJE_Z, v3(CABAZA.normal).normalize())
   cabaza.scale.set(1, CABAZA.achatado, 1)
   grupo.add(cabaza)
 
@@ -268,8 +270,7 @@ export function construirBerimbau() {
   // cara de afuera mira hacia adentro y la calabaza se lee como una bola.
   const geoFuera = new LatheGeometry([...perfilFuera].reverse(), 40)
   const geoDentro = new LatheGeometry(perfilDentro, 40)
-  // El torneado sale abierto hacia +Y; se acuesta para que la boca mire a +Z
-  // local, que el giro del grupo vuelve -Z del mundo: hacia quien toca.
+  // El torneado sale abierto hacia +Y; se acuesta para que la boca mire a +Z local.
   geoFuera.rotateX(Math.PI / 2)
   geoDentro.rotateX(Math.PI / 2)
 
@@ -282,28 +283,46 @@ export function construirBerimbau() {
   mat.canto.side = DoubleSide
   cabaza.add(new Mesh(new RingGeometry(CABAZA.radioBoca - CABAZA.pared, CABAZA.radioBoca, 40), mat.canto))
 
+  // La cicatriz del tallo en el fondo: una calabaza no es una esfera lisa.
+  const fondo = PERFIL[PERFIL.length - 1][1] * CABAZA.radioBoca
+  const boton = new Mesh(new CylinderGeometry(0.05, 0.075, 0.06, 8), mat.cuero)
+  boton.position.set(0, 0, -fondo + 0.015)
+  boton.rotation.x = Math.PI / 2
+  cabaza.add(boton)
+
   // --- la cordinha ------------------------------------------------------
   // Una sola cuerda: sube de un agujero del borde, da la vuelta alrededor de la
-  // madera Y del alambre —mordiendolos juntos— y baja al otro agujero.
+  // madera Y del alambre —mordiendolos juntos— y baja al otro agujero. Los
+  // agujeros van en el punto del borde mas cercano al arco, uno a cada lado.
   cabaza.updateMatrixWorld(true)
-  const agujero = (grados) => {
-    const a = grados * (Math.PI / 180)
-    const r = CABAZA.radioBoca - CABAZA.pared * 0.5
-    return cabaza.localToWorld(new Vector3(Math.cos(a) * r, Math.sin(a) * r, 0))
-  }
   const tAtadura = enAltura(CORDINHA.y)
   const madera = curva.getPoint(tAtadura)
   const rMadera = radioVerga(tAtadura)
   const xMedio = (madera.x + atadura.x) / 2
   const holgura = CORDINHA.tubo + 0.012
+  const trasero = new Vector3(xMedio + 0.05, CORDINHA.y - 0.04, rMadera + holgura)
+  const enBorde = (grados) => {
+    const a = grados * (Math.PI / 180)
+    const r = CABAZA.radioBoca - CABAZA.pared * 0.5
+    return cabaza.localToWorld(new Vector3(Math.cos(a) * r, Math.sin(a) * r, 0))
+  }
+  let anguloCercano = 0
+  let menor = Infinity
+  for (let g = 0; g < 360; g += 2) {
+    const d = enBorde(g).distanceTo(trasero)
+    if (d < menor) {
+      menor = d
+      anguloCercano = g
+    }
+  }
   const cordinha = new CatmullRomCurve3(
     [
-      agujero(CABAZA.agujeros[0]),
+      enBorde(anguloCercano - CABAZA.separacionAgujeros),
       new Vector3(atadura.x - ARAME.radio - holgura, CORDINHA.y - 0.03, -0.02),
       new Vector3(xMedio, CORDINHA.y + 0.02, -(rMadera + holgura)),
       new Vector3(madera.x + rMadera + holgura, CORDINHA.y, 0.02),
-      new Vector3(xMedio + 0.05, CORDINHA.y - 0.04, rMadera + holgura),
-      agujero(CABAZA.agujeros[1]),
+      trasero,
+      enBorde(anguloCercano + CABAZA.separacionAgujeros),
     ],
     false,
     'centripetal',
@@ -319,10 +338,9 @@ export function construirBerimbau() {
   dobrao.quaternion.setFromUnitVectors(EJE_Y, normalDobrao)
   grupo.add(dobrao)
 
-  // La baqueta: una varilla fina que entra por fuera, a punto de pegar.
-  const puntaBaqueta = v3(BAQUETA.punta)
-  const colaBaqueta = puntaBaqueta.clone().addScaledVector(v3(BAQUETA.direccion).normalize(), BAQUETA.largo)
-  grupo.add(barra(puntaBaqueta, colaBaqueta, BAQUETA.radio * 0.78, BAQUETA.radio, mat.maderaClara, 7))
+  // La baqueta, en reposo: apoyada dentro del arco, del hombro de la
+  // calabaza a la cara interna de la madera. Una varilla fina.
+  grupo.add(barra(v3(BAQUETA.desde), v3(BAQUETA.hasta), BAQUETA.radio, BAQUETA.radio * 0.8, mat.maderaClara, 7))
 
   return { grupo, cabaza, materiales: mat }
 }

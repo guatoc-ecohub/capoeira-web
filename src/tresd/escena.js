@@ -73,9 +73,12 @@ export function crearEscena(opciones) {
 
   // Una sola direccion de luz, y un relleno bajo para que la cara en sombra no
   // se hunda del todo. Nada mas: la sobriedad sale de aca.
-  const clave = new DirectionalLight(0xfff2dc, 2.3)
+  const clave = new DirectionalLight(0xfff2dc, 2.6)
   clave.position.set(...LUZ.clave).multiplyScalar(12)
   escena.add(clave)
+  const rebote = new DirectionalLight(0xa9c4b4, 0.85)
+  rebote.position.set(...LUZ.rebote).multiplyScalar(12)
+  escena.add(rebote)
   escena.add(new AmbientLight(0x2a4234, LUZ.relleno))
 
   const { grupo, cabaza, materiales } = construirBerimbau()
@@ -84,7 +87,7 @@ export function crearEscena(opciones) {
   // La luz que entra POR la boca. Puesta justo afuera del plano de la boca, del
   // lado de quien toca: asi el fondo del cuenco queda mas oscuro que el borde,
   // que es como se ilumina una vasija de verdad.
-  const luzBoca = new PointLight(PALETA.calido, 1.6, CABAZA.radioBoca * 3.2, 2)
+  const luzBoca = new PointLight(PALETA.calido, 0.9, CABAZA.radioBoca * 3.2, 2)
   luzBoca.position.set(0, 0.1, 0.5)
   cabaza.add(luzBoca)
 

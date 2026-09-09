@@ -10,7 +10,8 @@
 // identicas y el gate visual sirva de algo.
 //
 // PRESUPUESTO: esto se va a medir en un Pixel de gama campesino. Los mapas de
-// color van a 512, los de relieve a 256, y `bajarCalidad()` suelta relieve y
+// color van a 512 (la veta de la verga a 1024 por 128, porque corre a lo largo
+// de 16 unidades y en el primer plano se veia lisa), los de relieve a 256, y `bajarCalidad()` suelta relieve y
 // entorno de un golpe cuando el vigilante de cuadros lo pide.
 
 import {
@@ -130,34 +131,45 @@ function pintarMadera(ctx, w, h, modo) {
 
 function pintarCabazaFuera(ctx, w, h, modo) {
   const rnd = azar(SEMILLA + 7)
-  ctx.fillStyle = modo === 'altura' ? '#808080' : '#a87a41'
+  ctx.fillStyle = modo === 'altura' ? '#808080' : '#8f6533'
   ctx.fillRect(0, 0, w, h)
-  // Manchas: la piel de una calabaza seca nunca es de un solo tono.
-  for (let i = 0; i < 90; i += 1) {
+  // Manchas grandes: la piel de una calabaza seca nunca es de un solo tono, y
+  // la diferencia entre zonas es lo primero que la separa de una bola torneada.
+  for (let i = 0; i < 110; i += 1) {
     const cx = rnd() * w
     const cy = rnd() * h
-    const r = 18 + rnd() * 70
-    const claro = rnd() > 0.5
+    const r = 22 + rnd() * 90
+    const claro = rnd() > 0.55
     const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r)
-    const alfa = 0.05 + rnd() * 0.1
+    const alfa = 0.07 + rnd() * 0.16
     if (modo === 'altura') {
       grad.addColorStop(0, `rgba(${claro ? 200 : 60},${claro ? 200 : 60},${claro ? 200 : 60},${alfa})`)
       grad.addColorStop(1, 'rgba(128,128,128,0)')
     } else {
-      grad.addColorStop(0, claro ? `rgba(206,166,104,${alfa})` : `rgba(96,64,28,${alfa})`)
-      grad.addColorStop(1, 'rgba(168,122,65,0)')
+      grad.addColorStop(0, claro ? `rgba(198,150,86,${alfa})` : `rgba(74,44,16,${alfa})`)
+      grad.addColorStop(1, 'rgba(143,101,51,0)')
     }
     ctx.fillStyle = grad
     ctx.fillRect(cx - r, cy - r, r * 2, r * 2)
   }
+  // Pecas: puntos oscuros chicos, como los de una cascara vieja.
+  for (let i = 0; i < 260; i += 1) {
+    const cx = rnd() * w
+    const cy = rnd() * h
+    const r = 0.8 + rnd() * 2.6
+    ctx.fillStyle = modo === 'altura' ? `rgba(40,40,40,${0.08 + rnd() * 0.18})` : `rgba(52,30,10,${0.1 + rnd() * 0.22})`
+    ctx.beginPath()
+    ctx.ellipse(cx, cy, r * (0.7 + rnd() * 0.8), r, rnd() * 3, 0, Math.PI * 2)
+    ctx.fill()
+  }
   // Estrias por los meridianos: la U del torneado da la vuelta al eje.
-  for (let i = 0; i < 60; i += 1) {
+  for (let i = 0; i < 70; i += 1) {
     const x = rnd() * w
-    ctx.strokeStyle = modo === 'altura' ? 'rgba(70,70,70,0.07)' : 'rgba(78,52,22,0.08)'
-    ctx.lineWidth = 0.8 + rnd() * 2
+    ctx.strokeStyle = modo === 'altura' ? 'rgba(70,70,70,0.09)' : 'rgba(70,46,18,0.1)'
+    ctx.lineWidth = 0.8 + rnd() * 2.4
     ctx.beginPath()
     ctx.moveTo(x, 0)
-    ctx.lineTo(x + (rnd() - 0.5) * 14, h)
+    ctx.lineTo(x + (rnd() - 0.5) * 16, h)
     ctx.stroke()
   }
 }
@@ -319,8 +331,8 @@ export function crearMateriales() {
     return t
   }
 
-  const maderaMapa = guardar(textura(pintar(512, 128, pintarMadera, 'color')))
-  const maderaRelieve = guardar(textura(normalesDesdeAltura(pintar(256, 64, pintarMadera, 'altura'), 2.6), { color: false }))
+  const maderaMapa = guardar(textura(pintar(1024, 128, pintarMadera, 'color')))
+  const maderaRelieve = guardar(textura(normalesDesdeAltura(pintar(512, 64, pintarMadera, 'altura'), 2.6), { color: false }))
   const fueraMapa = guardar(textura(pintar(512, 512, pintarCabazaFuera, 'color')))
   const fueraRelieve = guardar(textura(normalesDesdeAltura(pintar(256, 256, pintarCabazaFuera, 'altura'), 1.6), { color: false }))
   const dentroMapa = guardar(textura(pintar(512, 512, pintarCabazaDentro, 'color')))
@@ -357,8 +369,8 @@ export function crearMateriales() {
     normalScale: new Vector2(0.55, 0.55),
     specularMap: fueraMapa,
     color: 0xffffff,
-    specular: 0x3a3122,
-    shininess: 22, // la cascara seca tiene algo de cera, no es mate del todo
+    specular: 0x2e2619,
+    shininess: 15, // la cascara seca tiene apenas algo de cera
   })
 
   const cabazaDentro = new MeshPhongMaterial({

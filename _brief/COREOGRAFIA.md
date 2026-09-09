@@ -28,21 +28,26 @@ real es la que da los ángulos.
 - La cabaça es una calabaza a **proporción real** (unos 12 % del largo de la verga; la
   anterior estaba al 17 %, inflada para que cupiera la cámara, y eso ayudaba a que se
   leyera como tambor). Está **cortada de lado**: la boca es más angosta que la panza,
-  ovalada, con la pared de grosor visible en el canto. Cuelga de la cordinha con la
-  **boca hacia el lado de quien toca** y la **panza hacia el público**; el arco cruza
-  por delante de la boca, cerca del borde, como en el instrumento real.
+  ovalada, con la pared de grosor visible en el canto. Cuelga de la cordinha **al lado
+  del arco**, con la **boca hacia el lado de la cuerda**, un poco vuelta al público y
+  un poco hacia arriba, como en el instrumento real. Así la boca se ve en tres cuartos
+  desde el público —se ve que está cortada— y la luz de la clave le entra y le dibuja
+  la pared de adentro.
 - El dobrão es una moneda gastada apretada contra el arame, un palmo encima de la
-  atadura. La baqueta es una varilla fina que entra por el lado de afuera.
+  atadura. La baqueta es una varilla fina **en reposo**, apoyada dentro del arco, del
+  hombro de la calabaza a la cara interna de la madera.
 
 Con eso quedan dos «caras» del instrumento que la cámara va a alternar:
 
 - **La cara del público** (por donde uno lo ve en la roda): el arco entero, la
-  cuerda por delante, y abajo la panza redonda de la calabaza tapando la atadura.
-- **La cara de quien toca**: la boca de la cabaça con el arco cruzándola, la cordinha
-  arriba, el interior raspado, y la mano —dobrão y baqueta— a la altura de los ojos.
+  cuerda por delante, y abajo la calabaza en tres cuartos, con la boca asomando
+  oscura hacia el lado de la cuerda.
+- **La cara de la cuerda**: de frente al arame, con el dobrão contra él, la baqueta
+  apoyada detrás, y la boca de la cabaça cada vez más abierta hasta quedar en tres
+  cuartos, con el interior raspado y la cordinha.
 
-El recorrido va de la primera cara a la segunda por encima de la punta, y termina en
-la segunda cara viendo el instrumento entero. Toda la coreografía se expresa en
+El recorrido va de la primera cara a la segunda por encima de la punta, sigue hasta
+el lado de quien toca y termina ahí viendo el instrumento entero, en espejo. Toda la coreografía se expresa en
 **azimut alrededor del eje vertical, elevación y distancia** respecto de un punto de
 enfoque; la cámara siempre mira al instrumento y nunca entra en ninguna pieza.
 
@@ -54,11 +59,11 @@ lado de la cuerda; −180° es la cara de quien toca.
 | # | Tramo | Desde dónde | Distancia | Lo que revela |
 |---|---|---|---|---|
 | 0 | El campamento | Público, tres cuartos por el lado de la cuerda (−28°), un poco por encima | Lejos: el instrumento entero | La silueta: arco asimétrico, cuerda tensa, la panza de la calabaza abajo |
-| 1 | Tres días, dos rodas | Por encima de la punta (−72°, 45° de elevación) | Media: la punta cerca, la cabaça al fondo | El arame en escorzo, de la punta a la calabaza; su amarre en la punta |
-| 2 | Las artes marciales | Bajo, por fuera y ya del lado de quien toca (−132°) | Cerca: la mano que toca | El dobrão contra el arame, la baqueta entrando, el brillo duro del alambre |
-| 3 | Los mestres | De frente a la boca, desde donde la ve quien toca (−176°) | Muy cerca: la cabaça | La boca ovalada, el canto con grosor, el interior raspado y la cordinha mordiendo madera y cuerda |
-| 4 | El lugar | Del lado de quien toca, abriéndose hacia la madera (−206°) | Lejos: el instrumento entero otra vez | La forma completa, ahora en espejo; y detrás, apareciendo, el valle de Guatoc |
-| 5 | Reservar | Un poco más de vuelta y más bajo (−226°), casi a la altura del centro | Lejos, quieto | Nada nuevo a propósito: el instrumento en reposo delante del lugar; el cierre |
+| 1 | Tres días, dos rodas | Por encima de la punta (−65°, 45° de elevación) | Media: la punta cerca, la cabaça al fondo | El arame en escorzo, de la punta a la calabaza; su amarre en la punta |
+| 2 | Las artes marciales | Bajo, de frente a la cuerda (−105°) | Cerca: la cuerda que se toca | El dobrão contra el arame, la baqueta apoyada, el brillo duro del alambre, la boca abajo |
+| 3 | Los mestres | La boca en tres cuartos, un poco desde arriba (−140°) | Muy cerca: la cabaça | La boca ovalada, el canto con grosor, el interior raspado y la cordinha mordiendo madera y cuerda |
+| 4 | El lugar | Del lado de quien toca (−188°) | Lejos: el instrumento entero otra vez | La forma completa, ahora en espejo; y detrás, apareciendo, el valle de Guatoc |
+| 5 | Reservar | Un poco más de vuelta y más bajo (−208°), casi a la altura del centro | Lejos, quieto | Nada nuevo a propósito: el instrumento en reposo delante del lugar; el cierre |
 
 ### 0 · El campamento — «Tres días de entrenamiento en Guatoc, con cupos contados»
 
@@ -96,27 +101,27 @@ movimiento, hasta la altura de la mano. El enfoque baja de la parte alta al dobr
 
 ### 2 · Las artes marciales — «Cuatro artes entran a la roda sin sacar a nadie de su contexto»
 
-Plano medio-corto, bajo, desde afuera y ya girado hacia el lado de quien toca. Lo
-primero en el cuadro es el arame, con el dobrão apretado detrás; la baqueta entra en
-diagonal desde el borde del cuadro hacia la cuerda. La madera queda más atrás. Abajo a
-la derecha empieza a asomar la boca de la cabaça, en oblicuo, con la cordinha encima.
+Plano medio-corto, bajo, de frente a la cuerda. Lo primero en el cuadro es el arame,
+con el dobrão apretado contra él; detrás, apoyada en diagonal dentro del arco, la
+baqueta; la madera más atrás. Abajo, la boca de la cabaça casi de frente, con la
+cordinha encima.
 
-Relación con el texto: las artes «entran» a la cuerda como la baqueta y el dobrão
-entran a ella; el arame es el marco donde todas aterrizan, que es lo que el texto dice
-de la capoeira. Es el tramo de la técnica, y por eso es el de la mano.
+Relación con el texto: las artes «entran» a la cuerda como el dobrão y la baqueta
+llegan a ella; el arame es el marco donde todas aterrizan, que es lo que el texto dice
+de la capoeira. Es el tramo de la técnica, y por eso es el de la cuerda que se toca.
 
-Salida hacia 3: la cámara termina de dar la vuelta hacia la cara de quien toca y se
-acerca a la cabaça. La boca, que en 2 estaba en oblicuo, se va abriendo hasta quedar de
-frente.
+Salida hacia 3: la cámara sigue girando hacia quien toca y baja a la cabaça. La boca,
+que en 2 estaba de frente, se va cerrando a tres cuartos, y eso es lo que la vuelve
+vasija: se ve la pared de afuera y la de adentro a la vez.
 
 ### 3 · Los mestres — «Tres miradas distintas sobre el mismo jogo»
 
-El plano más cerrado del viaje: de frente a la boca de la cabaça, desde donde la ve
-quien toca, ligeramente desde arriba para que se vea el interior. El arco cruza por
-delante de la boca; la cordinha arriba, mordiendo madera y cuerda; el canto del corte
-con su grosor; adentro, la pared raspada que se oscurece hacia el fondo. Aquí se ve
-que la cabaça es una vasija y no un disco: la boca es una elipse, el canto tiene
-espesor y la luz entra por un lado.
+El plano más cerrado del viaje: la boca de la cabaça en tres cuartos, ligeramente
+desde arriba para que se vea el interior, con el arco pasando junto a ella. La
+cordinha arriba, mordiendo madera y cuerda; el canto del corte con su grosor; adentro,
+la pared raspada que se oscurece hacia el fondo, con la luz de la clave entrando por
+un lado. Aquí se ve que la cabaça es una vasija y no un disco: la boca es una elipse,
+el canto tiene espesor y la panza sigue a la vista.
 
 Relación con el texto: es el punto donde se juntan las tres materias —madera, acero,
 calabaza— atadas por una cuerda; tres cosas distintas que hacen una sola voz. Y es la
@@ -152,9 +157,9 @@ Relación con el texto: reservar es decidir; el cuadro no se mueve más.
 
 ## Cómo se pasa de una parada a otra sin corte
 
-- **Un solo camino.** El azimut solo decrece: −28 → −72 → −132 → −176 → −206 → −226.
-  Nunca se devuelve. Los saltos van decreciendo (44°, 60°, 44°, 30°, 20°), así que el
-  viaje frena hacia el final en vez de marear.
+- **Un solo camino.** El azimut solo decrece: −28 → −65 → −105 → −140 → −188 → −208.
+  Nunca se devuelve. El último salto es el más corto (20°), así que el viaje frena
+  hacia el final en vez de marear.
 - **La interpolación es sobre los parámetros del giro**, no sobre las posiciones. La
   cámara entre dos paradas viaja por un arco alrededor del enfoque, no por la cuerda
   recta entre dos puntos (la cuerda recta se le mete al objeto a mitad de camino). Con
@@ -203,3 +208,66 @@ calcomanía, se dice.
 - 5: ¿el cuadro está en reposo?
 - Y en movimiento, que es como se juzga: ¿hay algún tramo en que la cámara corte la
   esquina y se acerque de más, o en que el instrumento salga del cuadro?
+
+## Correcciones tras el primer render (2026-09-09)
+
+La regla es que si el código y esta pieza se contradicen, el error está en el
+código; pero cuando la pantalla contradice a la pieza, se corrige la pieza y se
+anota. Dos cosas del tramo 0 no aguantaron:
+
+1. **La cabaça leía como bola de madera pulida.** La había puesto con la boca hacia
+   quien toca y la panza hacia el público: desde el hero solo se veía la panza. En el
+   instrumento real la boca mira hacia el lado de la cuerda y la calabaza cuelga al
+   lado del arco; con esa orientación la boca se ve en tres cuartos desde el público y
+   la luz de la clave le entra. Eso movió las paradas: la boca ya no está en −176°
+   sino en −140°, y las demás se corrieron para seguir en un solo camino. También se
+   oscureció y manchó la piel, y se le puso la cicatriz del tallo en el fondo.
+2. **La baqueta flotaba.** «A punto de pegar» sin una mano que la sostenga es un palo
+   suelto en el vacío. Queda en reposo, apoyada dentro del arco; el tramo 2 pasa de
+   «la mano que toca» a «la cuerda que se toca», que es lo que de verdad hay en cuadro.
+
+## Estado tras el segundo render y defectos que quedan (2026-09-09)
+
+Verificado con GPU real (`shot3d --headed`, Quadro M6000) en 1280×800: las seis
+paradas, los cinco puntos intermedios (0,5 · 1,5 · 2,5 · 3,5 · 4,5) y móvil 390×844
+en 0 y 3. Hay además una tira de 101 cuadros a paso 0,05 montada en vídeo
+(`/tmp/berimbau-fable/recorrido.mp4`), que es como se juzga. `npm run build` compila.
+
+Lo que aguanta: en 0 la cabaça se ve cortada (boca oscura, canto claro, panza) y el
+arco lee asimétrico con el quiebre del arame en la atadura; en 1 se lee como mirar un
+arco por la punta, con la calabaza al fondo; en 2 la moneda contra la cuerda y la
+cordinha mordiendo madera y alambre; en 3 la boca es una vasija —elipse, canto con
+espesor, pared interior raspada iluminada por la clave—; en 4 y 5 el instrumento
+vuelve entero, en espejo, delante del valle y la cascada, con materia y no en
+silueta; en ningún intermedio la cámara corta esquina ni el instrumento sale del
+cuadro; en móvil el enfoque queda encima de la tarjeta.
+
+Lo que se corrigió sobre la marcha, y por qué:
+
+- **Rebote desde el lado de quien toca.** Con una sola luz, 4 y 5 eran una silueta
+  negra delante del valle. Se sumó una direccional baja y fría desde −Z (la luz que
+  el valle devuelve). La clave sigue siendo la única dominante.
+- **La veta de la verga a 1024 px.** A 3,4 unidades la madera se veía lisa como
+  plástico: 512 px repartidos en 16 unidades no alcanzan.
+- **`arriba` por clave.** En pantalla angosta el enfoque sube por encima de la
+  tarjeta de copia; en 3 la boca quedaba detrás del texto.
+
+Defectos que quedan, nombrados:
+
+1. **Al cruzar −90° (alrededor de 1,5) el arco se ve de canto** y por una fracción
+   de tramo lee como un palo con una cuerda. Es el costo de rodear por el lado de la
+   cuerda; la elevación alta en ese punto lo atenúa pero no lo elimina. Se juzga en
+   movimiento: quieto se nota más de lo que dura.
+2. **En 1 el borde inferior de la calabaza roza el marco.** Mirando hacia abajo desde
+   la punta el instrumento es más largo que el cuadro; se prefirió que la punta y el
+   amarre estén enteros y la boca de la calabaza visible, a alejar la cámara y perder
+   la intimidad del plano.
+3. **En 2 la baqueta corre paralela a la madera** y de lejos puede leerse como parte
+   de ella. En reposo es lo honesto sin una mano; en 1,5 y 2,5 sí se separa.
+4. **El telón sigue siendo una foto plana.** Con niebla, viñeta y paralaje se lee como
+   vista y no como calcomanía en las capturas; en movimiento hay que confirmarlo.
+5. **No medido en Mali-G78.** Subieron la geometría (unos 5.000 triángulos contados
+   pieza por pieza, antes 2.800) y una textura; el vigilante de cuadros y los dos escalones de degradación
+   siguen ahí. Sigue siendo lo primero que hay que probar en el aparato.
+6. **Sin filtro anisotrópico** en la veta (`anisotropy: 1`, por presupuesto): en 1,
+   mirando la madera en escorzo, la veta se emborrona hacia lo lejos.

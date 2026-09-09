@@ -23,6 +23,7 @@ const posicion = new Vector3()
 const adelante = new Vector3()
 const derecha = new Vector3()
 const objetivo = new Vector3()
+const arribaCam = new Vector3()
 
 function suavizar(t) {
   return t * t * (3 - 2 * t)
@@ -51,6 +52,7 @@ export function crearRig(camara) {
     elevacion: 0,
     distancia: 1,
     derecha: 0,
+    arriba: 0,
     fov: 40,
     fit: 1,
     roll: 0,
@@ -70,6 +72,7 @@ export function crearRig(camara) {
     clave.elevacion = mezclar(a.elevacion, b.elevacion, e)
     clave.distancia = mezclar(a.distancia, b.distancia, e)
     clave.derecha = mezclar(a.derecha, b.derecha, e)
+    clave.arriba = mezclar(a.arriba ?? 0, b.arriba ?? 0, e)
     clave.fov = mezclar(a.fov, b.fov, e)
     clave.fit = mezclar(a.fit, b.fit, e)
     clave.roll = mezclar(a.roll ?? 0, b.roll ?? 0, e)
@@ -89,8 +92,10 @@ export function crearRig(camara) {
     const falta = 1 - estado.escalaAncho
     const distancia = clave.distancia * (1 + falta * clave.fit * 0.45)
     const fov = clave.fov + falta * (1 - clave.fit) * 14
-    // Sin columna segura, el instrumento va al centro.
+    // Sin columna segura, el instrumento va al centro y sube por encima de la
+    // tarjeta de copia.
     const corrimiento = clave.derecha * estado.escalaAncho
+    const subida = clave.arriba * falta
 
     // El puntero gira el objeto en la mano, apenas: un grado largo, y menos a
     // medida que el viaje se acerca a los primeros planos.
@@ -108,8 +113,10 @@ export function crearRig(camara) {
     // izquierda del enfoque, sobre el eje horizontal de la camara.
     adelante.copy(foco).sub(posicion).normalize()
     derecha.crossVectors(adelante, ARRIBA).normalize()
-    const semiancho = distancia * Math.tan((fov / 2) * GRADOS) * camara.aspect
-    objetivo.copy(foco).addScaledVector(derecha, -corrimiento * semiancho)
+    const semialto = distancia * Math.tan((fov / 2) * GRADOS)
+    const semiancho = semialto * camara.aspect
+    arribaCam.crossVectors(derecha, adelante).normalize()
+    objetivo.copy(foco).addScaledVector(derecha, -corrimiento * semiancho).addScaledVector(arribaCam, -subida * semialto)
 
     camara.position.copy(posicion)
     camara.lookAt(objetivo)
