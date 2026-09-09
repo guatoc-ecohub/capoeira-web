@@ -20,11 +20,16 @@ import {
   WebGLRenderer,
 } from 'three'
 
-import { CABAZA, LUZ, TELON } from './viaje.js'
-import { PALETA, animarMotas, construirBerimbau, construirMotas } from './berimbau.js'
+import { CABAZA, LUZ, TELON, ULTIMA_CLAVE } from './viaje.js'
+import { PALETA, animarMotas, construirBerimbau, construirMotas, construirTelon } from './berimbau.js'
 import { crearRig } from './rig.js'
 
 const MAX_PIXEL_RATIO = 1.5
+
+function suavizar(t) {
+  const x = Math.min(Math.max(t, 0), 1)
+  return x * x * (3 - 2 * x)
+}
 
 export function crearEscena(opciones) {
   const {
@@ -61,29 +66,32 @@ export function crearEscena(opciones) {
 
   const escena = new Scene()
   escena.background = new Color(PALETA.fondo)
-  escena.fog = new FogExp2(PALETA.fondo, 0.016)
+  escena.fog = new FogExp2(PALETA.fondo, 0.013)
 
-  const camara = new PerspectiveCamera(34, 1, 0.03, 160)
+  const camara = new PerspectiveCamera(34, 1, 0.05, 220)
   escena.add(camara)
 
   // Una sola direccion de luz, y un relleno bajo para que la cara en sombra no
-  // se hunda del todo. Nada mas: la sobriedad de la referencia sale de aca.
+  // se hunda del todo. Nada mas: la sobriedad sale de aca.
   const clave = new DirectionalLight(0xfff2dc, 2.3)
   clave.position.set(...LUZ.clave).multiplyScalar(12)
   escena.add(clave)
   escena.add(new AmbientLight(0x2a4234, LUZ.relleno))
 
-  const { grupo, cabaza, telon, materiales } = construirBerimbau()
+  const { grupo, cabaza, materiales } = construirBerimbau()
   escena.add(grupo)
 
-  // La luz que entra POR la boca. Puesta justo afuera del plano de la boca, no
-  // adentro: asi el fondo del cuenco queda mas oscuro que el borde, que es como
-  // se ilumina una vasija de verdad.
-  const luzBoca = new PointLight(PALETA.calido, 2.6, 3.2, 2)
-  luzBoca.position.set(0, 0.1, 0.55)
+  // La luz que entra POR la boca. Puesta justo afuera del plano de la boca, del
+  // lado de quien toca: asi el fondo del cuenco queda mas oscuro que el borde,
+  // que es como se ilumina una vasija de verdad.
+  const luzBoca = new PointLight(PALETA.calido, 1.6, CABAZA.radioBoca * 3.2, 2)
+  luzBoca.position.set(0, 0.1, 0.5)
   cabaza.add(luzBoca)
 
-  const motas = construirMotas(reducirMovimiento ? 40 : 70)
+  const telon = construirTelon(materiales.telon)
+  escena.add(telon)
+
+  const motas = construirMotas(reducirMovimiento ? 32 : 56)
   escena.add(motas)
 
   const rig = crearRig(camara)
@@ -119,6 +127,18 @@ export function crearEscena(opciones) {
   // En el camino del scroll no se mide nada: solo se lee scrollY.
   const alDesplazar = () => rig.alDesplazar()
   window.addEventListener('scroll', alDesplazar, { passive: true })
+
+  // El raton gira el objeto en la mano, apenas. Solo raton: en tactil el dedo
+  // esta scrolleando y no hay puntero que seguir.
+  const alMoverPuntero = (evento) => {
+    if (evento.pointerType && evento.pointerType !== 'mouse') return
+    rig.setPuntero((evento.clientX / window.innerWidth) * 2 - 1, -((evento.clientY / window.innerHeight) * 2 - 1))
+  }
+  const alSalirPuntero = () => rig.setPuntero(0, 0)
+  if (!reducirMovimiento) {
+    window.addEventListener('pointermove', alMoverPuntero, { passive: true })
+    window.addEventListener('pointerleave', alSalirPuntero, { passive: true })
+  }
 
   // ---------------------------------------------------- contexto y cuadros
   let vivo = true
@@ -176,6 +196,35 @@ export function crearEscena(opciones) {
     }
   }
 
+  // ------------------------------------------------------------- el telon
+  // La imagen no se pide al arrancar: se pide cuando el viaje ya va camino de
+  // la boca. Y se muestra segun la posicion del viaje: aparece cuando la camara
+  // retrocede desde la cabaca y se queda hasta el final.
+  let telonPedido = false
+  let telonListo = false
+  function pedirTelon() {
+    if (telonPedido) return
+    telonPedido = true
+    new TextureLoader().load(
+      TELON.imagen,
+      (imagen) => {
+        imagen.colorSpace = SRGBColorSpace
+        materiales.telon.map = imagen
+        materiales.telon.needsUpdate = true
+        telonListo = true
+      },
+      undefined,
+      () => {}, // si no llega, el instrumento queda en el vacio y ya
+    )
+  }
+
+  function acomodarTelon(posicion) {
+    if (!telonPedido && posicion > TELON.pedirDesde) pedirTelon()
+    const opacidad = suavizar((posicion - TELON.aparece[0]) / (TELON.aparece[1] - TELON.aparece[0]))
+    materiales.telon.opacity = opacidad
+    telon.visible = telonListo && opacidad > 0.004
+  }
+
   // -------------------------------------------------------------- el bucle
   let raf = 0
   let anterior = performance.now()
@@ -186,33 +235,40 @@ export function crearEscena(opciones) {
     const dt = Math.min((ahora - anterior) / 1000, 0.05)
     anterior = ahora
     rig.avanzar(reducirMovimiento ? 0 : dt)
-    if (!telonPedido && rig.suave > TELON.desde) pedirTelon()
+    acomodarTelon(rig.suave)
     if (!reducirMovimiento && motas.visible) animarMotas(motas, dt)
     renderizador.render(escena, camara)
     vigilar(dt)
   }
 
-  // La imagen del telon no se pide al arrancar: se pide cuando el viaje ya va
-  // camino de la cabaca. Antes de eso no se puede ver y seria peso regalado.
-  let telonPedido = false
-  function pedirTelon() {
-    if (telonPedido) return
-    telonPedido = true
-    new TextureLoader().load(
-      TELON.imagen,
-      (imagen) => {
-        imagen.colorSpace = SRGBColorSpace
-        materiales.telon.map = imagen
-        materiales.telon.needsUpdate = true
-        telon.visible = true
-      },
-      undefined,
-      () => {}, // si no llega, la boca da al vacio y ya
-    )
+  // Deja el viaje clavado en una posicion: mueve el documento a la altura que
+  // le corresponde y la camara aterriza ahi sin esperar al amortiguado.
+  function irA(posicion) {
+    const p = Math.min(Math.max(Number(posicion) || 0, 0), ULTIMA_CLAVE)
+    const arriba = rig.scrollDe(p)
+    if (arriba !== null) window.scrollTo({ top: arriba, behavior: 'auto' })
+    rig.irA(p)
+    acomodarTelon(p)
+    renderizador.render(escena, camara)
   }
 
   rig.avanzar(0)
+  acomodarTelon(rig.suave)
   raf = requestAnimationFrame(cuadro)
+
+  // Contrato para el arnes de capturas: clavar el viaje y leer donde quedo la
+  // camara. No lo usa la pagina.
+  window.__VIAJE__ = {
+    irA,
+    progreso: () => rig.suave,
+    muestra: () => ({
+      progreso: rig.suave,
+      x: camara.position.x,
+      y: camara.position.y,
+      z: camara.position.z,
+      fov: camara.fov,
+    }),
+  }
 
   function destruir() {
     vivo = false
@@ -221,11 +277,14 @@ export function crearEscena(opciones) {
     window.removeEventListener('resize', alRedimensionar)
     window.removeEventListener('orientationchange', alRedimensionar)
     window.removeEventListener('scroll', alDesplazar)
+    window.removeEventListener('pointermove', alMoverPuntero)
+    window.removeEventListener('pointerleave', alSalirPuntero)
     lienzo.removeEventListener('webglcontextlost', alPerderContexto)
+    if (window.__VIAJE__ && window.__VIAJE__.irA === irA) delete window.__VIAJE__
     escena.traverse((objeto) => {
       if (objeto.geometry) objeto.geometry.dispose()
-      const materiales = Array.isArray(objeto.material) ? objeto.material : [objeto.material]
-      for (const material of materiales) {
+      const lista = Array.isArray(objeto.material) ? objeto.material : [objeto.material]
+      for (const material of lista) {
         if (!material) continue
         if (material.map) material.map.dispose()
         material.dispose()
@@ -241,12 +300,7 @@ export function crearEscena(opciones) {
     destruir,
     medir,
     progreso: () => rig.suave,
-    radioCabaza: CABAZA.radio,
-    // Solo para pruebas: deja el viaje clavado en una posicion sin esperar al
-    // amortiguado ni al scroll.
-    irA(posicion) {
-      rig.irA(posicion)
-      renderizador.render(escena, camara)
-    },
+    radioCabaza: CABAZA.radioBoca,
+    irA,
   }
 }

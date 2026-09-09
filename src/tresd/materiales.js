@@ -280,6 +280,36 @@ function pintar(ancho, alto, dibujo, modo) {
   return nodo
 }
 
+// La fibra de una cuerda de algodon: hebras torcidas en diagonal. La U del tubo
+// corre a lo largo de la cuerda, asi que las rayas van inclinadas sobre V.
+function pintarCordel(ctx, w, h) {
+  const rnd = azar(SEMILLA + 45)
+  ctx.fillStyle = '#3f8a5c'
+  ctx.fillRect(0, 0, w, h)
+  for (let i = 0; i < 26; i += 1) {
+    const x = (i / 26) * w + (rnd() - 0.5) * 3
+    const claro = i % 2 === 0
+    ctx.strokeStyle = claro ? 'rgba(150,214,176,0.45)' : 'rgba(20,52,34,0.5)'
+    ctx.lineWidth = 1.2 + rnd() * 1.6
+    ctx.beginPath()
+    ctx.moveTo(x, 0)
+    ctx.lineTo(x + h * 0.9, h)
+    ctx.stroke()
+  }
+}
+
+// El desvanecido del telon: blanco al centro, negro en el borde. Con esto el
+// valle no tiene esquinas: se funde con el vacio antes de mostrar que es un
+// rectangulo.
+function pintarVineta(ctx, w, h) {
+  const grad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.22, w / 2, h / 2, Math.min(w, h) * 0.62)
+  grad.addColorStop(0, '#ffffff')
+  grad.addColorStop(0.55, '#c8c8c8')
+  grad.addColorStop(1, '#000000')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, w, h)
+}
+
 // ------------------------------------------------------------ construccion
 
 export function crearMateriales() {
@@ -296,6 +326,8 @@ export function crearMateriales() {
   const dentroMapa = guardar(textura(pintar(512, 512, pintarCabazaDentro, 'color')))
   const dentroRelieve = guardar(textura(normalesDesdeAltura(pintar(256, 256, pintarCabazaDentro, 'altura'), 3), { color: false }))
   const cantoMapa = guardar(textura(pintar(128, 128, pintarCanto, 'color')))
+  const cordelMapa = guardar(textura(pintar(128, 32, pintarCordel, 'color'), { repetirU: 22, repetirV: 1 }))
+  const vineta = guardar(textura(pintar(256, 192, pintarVineta, 'color'), { color: false }))
 
   const entorno = guardar(textura(pintar(256, 128, pintarEntorno, 'color')))
   entorno.mapping = EquirectangularReflectionMapping
@@ -345,26 +377,32 @@ export function crearMateriales() {
     shininess: 30,
   })
 
-  // Metal: el reflejo del entorno es lo que lo separa de una linea pintada.
+  // Acero, no oro: el arame de un berimbau es alambre de llanta. El reflejo del
+  // entorno es lo que lo separa de una linea pintada.
   const arame = new MeshPhongMaterial({
-    color: 0xe6b450,
-    specular: 0xfff1cd,
-    shininess: 220,
+    color: 0xd4d8d3,
+    specular: 0xffffff,
+    shininess: 260,
     envMap: entorno,
     combine: MixOperation,
-    reflectivity: 0.62,
+    reflectivity: 0.7,
   })
 
+  // Una moneda gastada: laton viejo, brillo apagado.
   const dobrao = new MeshPhongMaterial({
-    color: 0xdfae5a,
-    specular: 0xffe9b8,
-    shininess: 150,
+    color: 0xb58f52,
+    specular: 0xf2dfa8,
+    shininess: 90,
     envMap: entorno,
     combine: MixOperation,
-    reflectivity: 0.44,
+    reflectivity: 0.3,
   })
 
-  const cordel = new MeshPhongMaterial({ color: 0x58e39a, specular: 0x1d3a2a, shininess: 8 })
+  // Algodon tenido de verde, mate: la fibra torcida es lo que lo separa de un
+  // tubo de color.
+  const cordel = new MeshPhongMaterial({ map: cordelMapa, color: 0xffffff, specular: 0x142218, shininess: 5 })
+
+  const cuero = new MeshPhongMaterial({ color: 0x3a2416, specular: 0x2a1a10, shininess: 14 })
 
   const conRelieve = [madera, maderaClara, cabazaFuera, cabazaDentro]
   const conEntorno = [arame, dobrao]
@@ -378,9 +416,17 @@ export function crearMateriales() {
     arame,
     dobrao,
     cordel,
+    cuero,
     // Material del telon: sin luz, porque es una vista lejana y no un objeto de
-    // la escena. Se le pasa la textura desde afuera cuando llega.
-    telon: new MeshBasicMaterial({ color: 0x76897d, fog: false, depthWrite: true }),
+    // la escena. Con niebla, para que el vacio lo vele; con vineta, para que no
+    // tenga esquinas; con opacidad, que la escena sube y baja segun el viaje.
+    telon: new MeshBasicMaterial({
+      color: 0x93a49a,
+      alphaMap: vineta,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+    }),
 
     // El vigilante de cuadros llama esto: relieve y entorno se sueltan de un
     // golpe y la escena queda con color plano, que es barato y sigue leyendose.

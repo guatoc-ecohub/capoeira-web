@@ -1,16 +1,20 @@
 // El berimbau, modelado por codigo. Poca geometria, bien resuelta.
 //
-// Lo que tiene que leerse de un vistazo: el arame TENSO de punta a punta, que
-// dobla la verga y deja entre madera y cuerda un triangulo largo y estrecho; y
-// la cabaca ATADA abajo, con volumen de calabaza, boca ovalada y PARED CON
-// GROSOR. La cabaca se tornea de un perfil dibujado a mano y se construye con
-// dos superficies mas un anillo de canto: por eso el borde de la boca es un
-// canto y no una arista, y por eso no se lee como un tambor visto de frente.
+// Lo que tiene que leerse de un vistazo: una vara ESBELTA y ligeramente
+// irregular, doblada por el arame en un arco asimetrico —cerrado justo encima de
+// la cabaca, abierto y casi recto hacia la punta—; el alambre delgado y tenso,
+// amarrado con vueltas en las dos puntas y MORDIDO contra la madera por la
+// cordinha a la altura de la cabaca, donde tiene un quiebre; y la cabaca a
+// proporcion real, cortada de lado, con la boca mas angosta que la panza y la
+// pared con grosor, colgando con la boca hacia quien toca.
+//
+// Las medidas viven en viaje.js. Aca solo hay construccion.
 
 import {
   AdditiveBlending,
   BufferGeometry,
   CanvasTexture,
+  CatmullRomCurve3,
   CylinderGeometry,
   DoubleSide,
   Float32BufferAttribute,
@@ -20,15 +24,16 @@ import {
   PlaneGeometry,
   Points,
   PointsMaterial,
-  QuadraticBezierCurve3,
   RingGeometry,
+  SphereGeometry,
   SRGBColorSpace,
   TorusGeometry,
+  TubeGeometry,
   Vector2,
   Vector3,
 } from 'three'
 
-import { ARAME, BAQUETA, CABAZA, CORDINHA, DOBRAO, TELON, VERGA } from './viaje.js'
+import { ARAME, BAQUETA, CABAZA, CORDINHA, CUERO, DOBRAO, TELON, VERGA } from './viaje.js'
 import { crearMateriales } from './materiales.js'
 
 export const PALETA = {
@@ -37,32 +42,32 @@ export const PALETA = {
   inkSoft: 0xc3d5c8,
   acento: 0x58e39a,
   calido: 0xe6b450,
-  madera: 0x7d5730,
-  maderaClara: 0xc9a978,
-  cabazaFuera: 0xa87a41,
-  cabazaDentro: 0x6f4f26,
-  canto: 0xd8c49b,
 }
 
 const TAU = Math.PI * 2
+const EJE_Y = new Vector3(0, 1, 0)
+const EJE_Z = new Vector3(0, 0, 1)
 
 function v3(lista) {
   return new Vector3(lista[0], lista[1], lista[2])
 }
 
-// El perfil de la calabaza, del borde de la boca al fondo: [radio, hondura].
-// Mas ancha justo debajo del borde y cerrando en una panza redonda. Es aca —y no
-// en mas poligonos— donde esta la diferencia entre una calabaza y un casquete.
+// El perfil de la calabaza, del borde de la boca al fondo, en unidades del radio
+// de la boca: [radio, hondura]. Se abre justo debajo del borde hasta la panza,
+// mas ancha que la boca, y cierra en un fondo redondo. Es aca —y no en mas
+// poligonos— donde esta la diferencia entre una calabaza y un casquete.
 const PERFIL = [
-  [1, 0],
-  [1.022, 0.12],
-  [1.007, 0.28],
-  [0.933, 0.47],
-  [0.815, 0.645],
-  [0.637, 0.79],
-  [0.415, 0.908],
-  [0.193, 0.975],
-  [0, 1],
+  [1.0, 0],
+  [1.09, 0.1],
+  [1.22, 0.3],
+  [1.33, 0.56],
+  [1.37, 0.84],
+  [1.33, 1.12],
+  [1.2, 1.38],
+  [0.98, 1.6],
+  [0.68, 1.78],
+  [0.36, 1.9],
+  [0, 1.96],
 ]
 
 // Desplaza el perfil hacia adentro por su propia normal: eso da una pared de
@@ -75,7 +80,6 @@ function perfilInterior(perfil, grosor) {
     const tx = siguiente[0] - previo[0]
     const ty = siguiente[1] - previo[1]
     const largo = Math.hypot(tx, ty) || 1
-    // Normal hacia afuera del cuenco.
     const nx = ty / largo
     const ny = -tx / largo
     salida.push([Math.max(perfil[i][0] - nx * grosor, 0), perfil[i][1] - ny * grosor])
@@ -83,8 +87,8 @@ function perfilInterior(perfil, grosor) {
   return salida
 }
 
-function puntosLathe(perfil, radio, fondo) {
-  return perfil.map(([r, h]) => new Vector2(r * radio, -h * fondo))
+function puntosLathe(perfil, escala) {
+  return perfil.map(([r, h]) => new Vector2(r * escala, -h * escala))
 }
 
 // -------------------------------------------------------------- utilidades
@@ -114,7 +118,7 @@ function texturaMota() {
   })
 }
 
-// Tubo de radio variable: la verga es gruesa en el pie y esbelta en la punta.
+// Tubo de radio variable a lo largo de una curva.
 function tuboAhusado(curva, segmentos, lados, radioEn) {
   const marcos = curva.computeFrenetFrames(segmentos, false)
   const posiciones = []
@@ -159,12 +163,20 @@ function tuboAhusado(curva, segmentos, lados, radioEn) {
   return geometria
 }
 
-function barra(desde, hasta, radio, material, lados = 5) {
+function barra(desde, hasta, radioA, radioB, material, lados = 6) {
   const largo = desde.distanceTo(hasta)
-  const malla = new Mesh(new CylinderGeometry(radio, radio, largo, lados, 1, true), material)
+  const malla = new Mesh(new CylinderGeometry(radioA, radioB, largo, lados, 1, false), material)
   malla.position.copy(desde).add(hasta).multiplyScalar(0.5)
-  malla.quaternion.setFromUnitVectors(new Vector3(0, 1, 0), hasta.clone().sub(desde).normalize())
+  malla.quaternion.setFromUnitVectors(EJE_Y, hasta.clone().sub(desde).normalize())
   return malla
+}
+
+// Un anillo (una vuelta de alambre o de cuerda) alrededor de un eje.
+function vuelta(centro, eje, radioMayor, radioTubo, material) {
+  const anillo = new Mesh(new TorusGeometry(radioMayor, radioTubo, 5, 16), material)
+  anillo.position.copy(centro)
+  anillo.quaternion.setFromUnitVectors(EJE_Z, eje.clone().normalize())
+  return anillo
 }
 
 // ------------------------------------------------------------ construccion
@@ -172,28 +184,72 @@ function barra(desde, hasta, radio, material, lados = 5) {
 export function construirBerimbau() {
   const grupo = new Group()
   grupo.name = 'berimbau'
-
-  const pie = v3(VERGA.pie)
-  const punta = v3(VERGA.punta)
-  const curvaVerga = new QuadraticBezierCurve3(pie, v3(VERGA.control), punta)
-
   const mat = crearMateriales()
-  const matMadera = mat.madera
-  const matCordel = mat.cordel
-  const matMetal = mat.arame
 
-  const geoVerga = tuboAhusado(curvaVerga, 44, 8, (t) => VERGA.radioPie + (VERGA.radioPunta - VERGA.radioPie) * t)
-  grupo.add(new Mesh(geoVerga, matMadera))
+  // --- la verga ---------------------------------------------------------
+  const curva = new CatmullRomCurve3(VERGA.puntos.map(v3), false, 'centripetal', 0.5)
 
-  grupo.add(barra(pie, punta, ARAME.radio, matMetal, 6))
+  // Grosor casi parejo con un vaiven leve: es una rama, no un torneado.
+  function radioVerga(t) {
+    const base = VERGA.radioPie + (VERGA.radioPunta - VERGA.radioPie) * Math.pow(t, 0.85)
+    return base + 0.006 * Math.sin(t * 23 + 0.7) + 0.004 * Math.sin(t * 41 + 2.1)
+  }
 
-  const geoNudo = new TorusGeometry(0.15, 0.05, 5, 12)
-  for (const extremo of [pie, punta]) {
-    const nudo = new Mesh(geoNudo, matCordel)
-    nudo.position.copy(extremo)
-    nudo.position.y += extremo.y < 0 ? 0.42 : -0.42
-    nudo.rotation.x = Math.PI / 2
-    grupo.add(nudo)
+  // El parametro de la curva a una altura dada. La vara es monotona en Y.
+  function enAltura(y) {
+    let lo = 0
+    let hi = 1
+    const p = new Vector3()
+    for (let i = 0; i < 40; i += 1) {
+      const mid = (lo + hi) / 2
+      curva.getPoint(mid, p)
+      if (p.y < y) lo = mid
+      else hi = mid
+    }
+    return (lo + hi) / 2
+  }
+
+  grupo.add(new Mesh(tuboAhusado(curva, 72, 10, radioVerga), mat.madera))
+
+  // Las puntas cerradas: vistas de canto, un tubo abierto es un hueco.
+  for (const t of [0, 1]) {
+    const tapa = new Mesh(new SphereGeometry(radioVerga(t) * 0.98, 8, 6), mat.madera)
+    tapa.position.copy(curva.getPoint(t))
+    grupo.add(tapa)
+  }
+
+  // El cuero del pie, alineado con la vara.
+  const tCuero = enAltura(VERGA.puntos[0][1] + CUERO.largo / 2)
+  const cuero = new Mesh(new CylinderGeometry(CUERO.radio, CUERO.radio * 0.9, CUERO.largo, 12, 1, false), mat.cuero)
+  cuero.position.copy(curva.getPoint(tCuero))
+  cuero.quaternion.setFromUnitVectors(EJE_Y, curva.getTangent(tCuero))
+  grupo.add(cuero)
+
+  // --- el arame ---------------------------------------------------------
+  // Tres puntos: donde se amarra en la punta, donde la cordinha lo muerde
+  // contra la madera, y donde se amarra en el pie. Corre por el lado -X de la
+  // vara, pegado a ella; el quiebre en la atadura es la tension hecha visible.
+  function puntoArame(y, holgura) {
+    const t = enAltura(y)
+    const centro = curva.getPoint(t)
+    return new Vector3(centro.x - (radioVerga(t) + ARAME.radio + holgura), y, centro.z)
+  }
+  const anclaPunta = puntoArame(ARAME.yPunta, 0.005)
+  const atadura = puntoArame(ARAME.yAtadura, 0.012)
+  const anclaPie = puntoArame(ARAME.yPie, CUERO.radio - radioVerga(0) + 0.005)
+
+  grupo.add(barra(anclaPunta, atadura, ARAME.radio, ARAME.radio, mat.arame, 7))
+  grupo.add(barra(atadura, anclaPie, ARAME.radio, ARAME.radio, mat.arame, 7))
+
+  // Las vueltas que lo amarran: alrededor de la madera en la punta, alrededor
+  // del cuero en el pie.
+  for (let i = 0; i < ARAME.vueltas; i += 1) {
+    const yPunta = ARAME.yPunta - i * ARAME.radio * 2.4
+    const tp = enAltura(yPunta)
+    grupo.add(vuelta(curva.getPoint(tp), curva.getTangent(tp), radioVerga(tp) + ARAME.radio * 0.6, ARAME.radio, mat.arame))
+    const yPie = ARAME.yPie + i * ARAME.radio * 2.4
+    const tb = enAltura(yPie)
+    grupo.add(vuelta(curva.getPoint(tb), curva.getTangent(tb), CUERO.radio + ARAME.radio * 0.6, ARAME.radio, mat.arame))
   }
 
   // --- la cabaca --------------------------------------------------------
@@ -204,20 +260,16 @@ export function construirBerimbau() {
   cabaza.scale.set(1, CABAZA.achatado, 1)
   grupo.add(cabaza)
 
-  const perfilFuera = puntosLathe(PERFIL, CABAZA.radio, CABAZA.fondo)
-  const perfilDentro = puntosLathe(
-    perfilInterior(PERFIL, CABAZA.pared / CABAZA.radio),
-    CABAZA.radio,
-    CABAZA.fondo,
-  )
+  const perfilFuera = puntosLathe(PERFIL, CABAZA.radioBoca)
+  const perfilDentro = puntosLathe(perfilInterior(PERFIL, CABAZA.pared / CABAZA.radioBoca), CABAZA.radioBoca)
 
   // Invertido a proposito: el perfil corre del borde al fondo (Y decreciente) y
   // LatheGeometry saca las normales del orden de los puntos. Sin invertirlo, la
-  // cara de afuera mira hacia adentro, la boca no se ve y la calabaza se lee
-  // como una bola.
-  const geoFuera = new LatheGeometry([...perfilFuera].reverse(), 44)
-  const geoDentro = new LatheGeometry(perfilDentro, 44)
-  // El torneado sale abierto hacia +Y; se acuesta para que la boca mire a +Z.
+  // cara de afuera mira hacia adentro y la calabaza se lee como una bola.
+  const geoFuera = new LatheGeometry([...perfilFuera].reverse(), 40)
+  const geoDentro = new LatheGeometry(perfilDentro, 40)
+  // El torneado sale abierto hacia +Y; se acuesta para que la boca mire a +Z
+  // local, que el giro del grupo vuelve -Z del mundo: hacia quien toca.
   geoFuera.rotateX(Math.PI / 2)
   geoDentro.rotateX(Math.PI / 2)
 
@@ -228,81 +280,85 @@ export function construirBerimbau() {
   // El CANTO de la boca: el anillo que une las dos superficies. Es lo que da el
   // grosor de pared y lo que hace que la boca se lea como un borde.
   mat.canto.side = DoubleSide
-  const canto = new Mesh(new RingGeometry(CABAZA.radio - CABAZA.pared, CABAZA.radio, 44), mat.canto)
-  cabaza.add(canto)
+  cabaza.add(new Mesh(new RingGeometry(CABAZA.radioBoca - CABAZA.pared, CABAZA.radioBoca, 40), mat.canto))
 
-  // --- la atadura -------------------------------------------------------
-  const xVerga = curvaVerga.getPoint((CORDINHA.y + 8) / 16).x
-  const lazo = new Mesh(new TorusGeometry(CORDINHA.radio, CORDINHA.tubo, 5, 18), matCordel)
-  lazo.position.set(xVerga, CORDINHA.y, 0)
-  lazo.rotation.x = Math.PI / 2
-  grupo.add(lazo)
-
-  const zFondo = CABAZA.boca[2] - CABAZA.fondo
-  for (const lado of [-1, 1]) {
-    grupo.add(
-      barra(
-        new Vector3(xVerga + lado * 0.16, CORDINHA.y - 0.05, 0.18),
-        new Vector3(CABAZA.boca[0] + lado * 0.3, CABAZA.boca[1] + 0.55, zFondo + 0.12),
-        0.032,
-        matCordel,
-        4,
-      ),
-    )
+  // --- la cordinha ------------------------------------------------------
+  // Una sola cuerda: sube de un agujero del borde, da la vuelta alrededor de la
+  // madera Y del alambre —mordiendolos juntos— y baja al otro agujero.
+  cabaza.updateMatrixWorld(true)
+  const agujero = (grados) => {
+    const a = grados * (Math.PI / 180)
+    const r = CABAZA.radioBoca - CABAZA.pared * 0.5
+    return cabaza.localToWorld(new Vector3(Math.cos(a) * r, Math.sin(a) * r, 0))
   }
+  const tAtadura = enAltura(CORDINHA.y)
+  const madera = curva.getPoint(tAtadura)
+  const rMadera = radioVerga(tAtadura)
+  const xMedio = (madera.x + atadura.x) / 2
+  const holgura = CORDINHA.tubo + 0.012
+  const cordinha = new CatmullRomCurve3(
+    [
+      agujero(CABAZA.agujeros[0]),
+      new Vector3(atadura.x - ARAME.radio - holgura, CORDINHA.y - 0.03, -0.02),
+      new Vector3(xMedio, CORDINHA.y + 0.02, -(rMadera + holgura)),
+      new Vector3(madera.x + rMadera + holgura, CORDINHA.y, 0.02),
+      new Vector3(xMedio + 0.05, CORDINHA.y - 0.04, rMadera + holgura),
+      agujero(CABAZA.agujeros[1]),
+    ],
+    false,
+    'centripetal',
+  )
+  grupo.add(new Mesh(new TubeGeometry(cordinha, 48, CORDINHA.tubo, 6, false), mat.cordel))
 
   // --- la mano que toca -------------------------------------------------
-  const dobrao = new Mesh(new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 16), mat.dobrao)
-  dobrao.position.set(...DOBRAO.posicion)
-  dobrao.rotation.x = Math.PI / 2
-  dobrao.rotation.z = 0.18
+  // El dobrao, apretado contra el alambre un palmo encima de la atadura.
+  const normalDobrao = v3(DOBRAO.normal).normalize()
+  const sobreArame = atadura.clone().lerp(anclaPunta, (DOBRAO.y - atadura.y) / (anclaPunta.y - atadura.y))
+  const dobrao = new Mesh(new CylinderGeometry(DOBRAO.radio, DOBRAO.radio, DOBRAO.grosor, 20), mat.dobrao)
+  dobrao.position.copy(sobreArame).addScaledVector(normalDobrao, DOBRAO.grosor / 2 + ARAME.radio)
+  dobrao.quaternion.setFromUnitVectors(EJE_Y, normalDobrao)
   grupo.add(dobrao)
 
-  const baqueta = new Mesh(new CylinderGeometry(BAQUETA.radio, BAQUETA.radio * 0.78, BAQUETA.largo, 6), mat.maderaClara)
-  baqueta.position.set(...BAQUETA.posicion)
-  baqueta.rotation.z = Math.PI / 2 - BAQUETA.inclinacion
-  baqueta.rotation.y = 0.22
-  grupo.add(baqueta)
+  // La baqueta: una varilla fina que entra por fuera, a punto de pegar.
+  const puntaBaqueta = v3(BAQUETA.punta)
+  const colaBaqueta = puntaBaqueta.clone().addScaledVector(v3(BAQUETA.direccion).normalize(), BAQUETA.largo)
+  grupo.add(barra(puntaBaqueta, colaBaqueta, BAQUETA.radio * 0.78, BAQUETA.radio, mat.maderaClara, 7))
 
-  // El TELON: lo que se ve al mirar hacia afuera por la boca. Va colgado del
-  // grupo de la cabaca, asi que queda solo sobre el eje de la boca sin tener
-  // que calcularlo; y va LEJOS —36 unidades— para que se lea como la vista de
-  // allá afuera y no como una calcomania pegada al cuenco.
-  //
-  // No hace falta apagarlo en el resto del viaje: en todos los demas tramos la
-  // camara mira hacia -Z y el telon le queda literalmente a la espalda. La
-  // geometria sola lo resuelve.
-  const telon = new Mesh(new PlaneGeometry(84, 63), mat.telon)
-  telon.position.set(0, 0, TELON.distancia)
-  telon.rotation.y = Math.PI // de cara al cuenco
-  telon.scale.y = 1 / CABAZA.achatado // deshace el achatado de la boca
-  telon.visible = false // hasta que llegue la imagen
+  return { grupo, cabaza, materiales: mat }
+}
+
+// El TELON: el valle de Guatoc, lejos, detras del instrumento. Va en el mundo,
+// no colgado de ninguna pieza; mira al instrumento. Su opacidad la maneja la
+// escena segun la posicion del viaje.
+export function construirTelon(material) {
+  const telon = new Mesh(new PlaneGeometry(TELON.ancho, TELON.alto), material)
+  telon.position.set(...TELON.posicion)
+  telon.lookAt(0, TELON.posicion[1], 0)
+  telon.visible = false // hasta que llegue la imagen y el viaje lo pida
   telon.frustumCulled = false
-  cabaza.add(telon)
-
-  return { grupo, cabaza, telon, materiales: mat }
+  return telon
 }
 
 // Motas de luz en el vacio. Pocas y tenues: dan profundidad sin ensuciar.
-export function construirMotas(cantidad = 70) {
+export function construirMotas(cantidad = 56) {
   const posiciones = new Float32Array(cantidad * 3)
   const velocidades = new Float32Array(cantidad)
   for (let i = 0; i < cantidad; i += 1) {
     const angulo = Math.random() * TAU
-    const radio = 3 + Math.random() * 9
-    posiciones[i * 3] = Math.cos(angulo) * radio
+    const radio = 3 + Math.random() * 10
+    posiciones[i * 3] = Math.cos(angulo) * radio + 1
     posiciones[i * 3 + 1] = -9 + Math.random() * 18
-    posiciones[i * 3 + 2] = Math.sin(angulo) * radio - 1
-    velocidades[i] = 0.14 + Math.random() * 0.4
+    posiciones[i * 3 + 2] = Math.sin(angulo) * radio
+    velocidades[i] = 0.12 + Math.random() * 0.35
   }
   const geometria = new BufferGeometry()
   geometria.setAttribute('position', new Float32BufferAttribute(posiciones, 3))
   const material = new PointsMaterial({
-    size: 0.16,
+    size: 0.14,
     map: texturaMota(),
     color: PALETA.acento,
     transparent: true,
-    opacity: 0.38,
+    opacity: 0.34,
     depthWrite: false,
     blending: AdditiveBlending,
     sizeAttenuation: true,

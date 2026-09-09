@@ -296,7 +296,13 @@ export default function Berimbau3D({ alCaer, verTexto }) {
         setEstado('listo')
         // Las secciones ya están en el DOM, pero sus alturas dependen de las
         // fuentes y de las imágenes: se vuelve a medir cuando el layout asienta.
-        window.setTimeout(() => control.medir(), 60)
+        // `?viaje=N` clava el viaje en una posición: es para el arnés de
+        // capturas, y solo actúa una vez, ya medido.
+        window.setTimeout(() => {
+          control.medir()
+          const pedido = new URLSearchParams(window.location.search).get('viaje')
+          if (pedido !== null && pedido !== '' && Number.isFinite(Number(pedido))) control.irA(Number(pedido))
+        }, 60)
       })
       .catch(() => {
         if (vigente) caer('carga')
